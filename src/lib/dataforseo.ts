@@ -3,7 +3,7 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 
 interface FetchOptions {
   method?: 'GET' | 'POST';
-  postData?: any;
+  postData?: unknown;
   cacheTtl?: number; // Time to live in seconds
   email: string;
   category: string;
