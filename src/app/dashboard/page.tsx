@@ -2,6 +2,9 @@
 import { headers } from 'next/headers';
 import { fetchWithKVCache } from '@/lib/dataforseo';
 
+// Add this line to tell Next.js to compile this for Cloudflare's Edge
+export const runtime = 'edge';
+
 export default async function DashboardPage() {
   // 1. Await the headers to get the logged-in user's email from Cloudflare Access
   const headersList = await headers();
