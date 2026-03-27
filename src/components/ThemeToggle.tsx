@@ -9,13 +9,13 @@ export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // This ensures the component only renders its interactive state on the client
   useEffect(() => {
-    // We disable the rule here because we must trigger a re-render 
-    // to show the theme-specific icon only after client-side hydration.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
+  // To avoid the linter warning, we check 'mounted' before rendering the UI
+  // The placeholder matches the size of the button to prevent layout shift
   if (!mounted) {
     return <div className="p-2 h-9 w-9 rounded-lg bg-slate-100 dark:bg-slate-800" />;
   }
@@ -32,9 +32,9 @@ export default function ThemeToggle() {
       aria-label="Toggle Theme"
     >
       {theme === 'dark' ? (
-        <Sun className="h-5 w-5 transition-transform" />
+        <Sun className="h-5 w-5" />
       ) : (
-        <Moon className="h-5 w-5 transition-transform" />
+        <Moon className="h-5 w-5" />
       )}
     </button>
   );
