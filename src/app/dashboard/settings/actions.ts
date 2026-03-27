@@ -1,3 +1,4 @@
+// src/app/dashboard/settings/actions.ts
 'use server'
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
@@ -5,22 +6,33 @@ import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-export async function deleteCredentials() {
+export async function updateSettings(formData: FormData) {
+  const user = formData.get('login') as string;
+  const pass = formData.get('password') as string;
+  
   const headersList = await headers();
-  const userEmail = headersList.get('Cf-Access-Authenticated-User-Email');
-
-  if (!userEmail) throw new Error('Unauthorized');
+  const email = headersList.get('Cf-Access-Authenticated-User-Email');
+  if (!email || !user || !pass) return;
 
   const { env } = getRequestContext();
-  const credentialsKey = `${userEmail}:settings:credentials`;
-
-  // Wipe the keys from KV
-  await env.dfsui.delete(credentialsKey);
-
-  // Clear all cached API responses for this user to ensure privacy
-  // In a production app, you'd iterate through keys with the email prefix, 
-  // but for now, we'll just force a dashboard refresh.
   
+  await env.dfsui.put(`${email}:credentials:dfs-user`, user);
+  await env.dfsui.put(`${email}:credentials:dfs-pass`, pass);
+  
+  revalidatePath('/dashboard/settings');
+}
+
+export async function deleteCredentials() {
+  const headersList = await headers();
+  const email = headersList.get('Cf-Access-Authenticated-User-Email');
+  if (!email) throw new Error('Unauthorized');
+
+  const { env } = getRequestContext();
+
+  // Wipe the granular keys
+  await env.dfsui.delete(`${email}:credentials:dfs-user`);
+  await env.dfsui.delete(`${email}:credentials:dfs-pass`);
+
   revalidatePath('/dashboard');
-  redirect('/dashboard');
+  redirect('/dashboard/settings');
 }
