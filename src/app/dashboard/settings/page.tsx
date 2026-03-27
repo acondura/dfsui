@@ -123,7 +123,7 @@ export default async function SettingsPage() {
       <div className="bg-red-50/30 border border-red-100 rounded-2xl p-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-1.5 bg-red-100 rounded-md text-red-600">
-             ⚠️
+            ⚠️
           </div>
           <h2 className="font-bold text-red-700">Danger Zone</h2>
         </div>
@@ -135,7 +135,6 @@ export default async function SettingsPage() {
           <button 
             type="submit" 
             className="w-full md:w-auto px-6 py-2.5 bg-white border border-red-200 text-red-600 text-sm font-bold rounded-lg hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-sm"
-            onClick={(e) => { if(!confirm("Are you sure?")) e.preventDefault(); }}
           >
             Disconnect DataForSEO
           </button>
