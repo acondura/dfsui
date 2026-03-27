@@ -10,6 +10,7 @@ import {
   Settings, 
   Database 
 } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 const navigation = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -58,11 +59,12 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-100">
-        <div className="bg-slate-50 rounded-lg p-3">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Storage</p>
-          <p className="text-xs text-slate-400 mt-1">Cloudflare KV Enabled</p>
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-2 flex-1 mr-3">
+          <p className="text-[10px] font-semibold text-slate-500 uppercase">Storage</p>
+          <p className="text-[10px] text-slate-400">KV Edge Enabled</p>
         </div>
+        <ThemeToggle />
       </div>
     </div>
   );
