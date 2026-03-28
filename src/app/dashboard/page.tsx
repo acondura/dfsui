@@ -1,85 +1,77 @@
 // src/app/dashboard/page.tsx
 import { headers } from 'next/headers';
-import { fetchWithKVCache } from '@/lib/dataforseo';
-import { saveCredentials } from './actions';
+import { getRequestContext } from '@cloudflare/next-on-pages';
 
-// Tell Next.js to compile this for Cloudflare's Edge
 export const runtime = 'edge';
 
+interface DFUserResponse {
+  tasks?: Array<{
+    result?: Array<{
+      money?: { balance?: number; };
+    }>;
+  }>;
+}
+
 export default async function DashboardPage() {
-  // 1. Await the headers to get the logged-in user's email from Cloudflare Access
   const headersList = await headers();
-  const userEmail = headersList.get('Cf-Access-Authenticated-User-Email') || 'unknown@user.com';
+  const email = headersList.get('cf-access-authenticated-user-email') || 'User';
+  const { env } = getRequestContext();
 
-  let balance = null;
-  let needsCredentials = false;
+  const dfsUser = await env.dfsui.get(`${email}:credentials:dfs-user`);
+  const dfsPass = await env.dfsui.get(`${email}:credentials:dfs-pass`);
+  let balance = "---";
 
-  // 2. Fetch the API balance using the cache key structure
-  try {
-    const data = await fetchWithKVCache('appendix/user_data', {
-      method: 'GET',
-      email: userEmail,
-      category: 'account',
-      child: 'balance',
-      cacheTtl: 3600 // Cache balance for 1 hour
-    });
-    
-    balance = data?.tasks?.[0]?.result?.[0]?.money?.balance;
-  } catch (e) {
-    // Safely cast the error to check its message without upsetting ESLint
-    const error = e as Error;
-    if (error.message === "MISSING_CREDENTIALS") {
-      needsCredentials = true;
-    } else {
-      console.error("Failed to load budget:", error);
-    }
+  if (dfsUser && dfsPass) {
+    try {
+      const auth = btoa(`${dfsUser}:${dfsPass}`);
+      const res = await fetch('https://api.dataforseo.com/v3/appendix/user_data', {
+        headers: { 'Authorization': `Basic ${auth}` },
+        next: { revalidate: 60 }
+      });
+      const data = await res.json() as DFUserResponse;
+      balance = (data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0).toFixed(2);
+    } catch (e) { /* Fallback to --- */ }
   }
 
-  // 3. Render the Onboarding UI if credentials are not found in KV
-  if (needsCredentials) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center max-w-2xl mx-auto mt-10">
-        <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect Your DataForSEO Account</h2>
-        <p className="text-gray-600 mb-8">
-          Welcome, {userEmail}! To start using DFS UI, you need to provide your DataForSEO API credentials. They will be stored securely in your isolated Edge cache.
-        </p>
-        
-        {/* Wire the Server Action to the form */}
-        <form action={saveCredentials} className="space-y-4 max-w-md mx-auto text-left">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">API Login (Email)</label>
-            <input type="text" name="login" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">API Password</label>
-            <input type="password" name="password" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
-          </div>
-          <button type="submit" className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition-colors">
-            Save Credentials
-          </button>
-        </form>
-      </div>
-    );
-  }
-
-  // 4. Render the standard Dashboard UI
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-4">Welcome back, {userEmail}</h1>
-      
-      <div className="bg-gray-50 p-4 rounded border border-gray-100 flex justify-between items-center max-w-md">
-        <span className="text-gray-600 font-medium">DataForSEO Available Budget:</span>
-        <span className="text-2xl font-bold text-green-600">
-          ${balance !== null ? balance.toFixed(2) : '---'}
-        </span>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-12 shadow-sm relative overflow-hidden">
+        {/* Subtle decorative background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full -mr-32 -mt-32 opacity-40" />
+        
+        <div className="relative z-10">
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+            Welcome back, <span className="text-blue-600">{email.split('@')[0]}</span>
+          </h1>
+          
+          <div className="mt-10 p-8 bg-[#f8fafc] rounded-3xl border border-slate-100 flex items-center justify-between group hover:border-blue-200 transition-colors">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Current Account Power</p>
+              <span className="text-slate-600 font-bold text-lg">DataForSEO Available Budget:</span>
+            </div>
+            <div className="text-3xl font-mono font-bold text-emerald-600 bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm">
+              ${balance}
+            </div>
+          </div>
+
+          <div className="mt-10 flex items-center gap-3 text-slate-400">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            <p className="text-sm font-medium italic">
+              Select a tool from the sidebar to begin your research.
+            </p>
+          </div>
+        </div>
       </div>
-      
-      <p className="mt-6 text-sm text-gray-500">
-        Select a tool from the sidebar to begin.
-      </p>
+
+      {/* Quick Stats Grid Placeholder */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {['Keywords', 'SERP', 'Explorer'].map((item) => (
+          <div key={item} className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm opacity-50 grayscale">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item} Usage</p>
+            <p className="text-xl font-bold text-slate-900 mt-1">0 credits</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
