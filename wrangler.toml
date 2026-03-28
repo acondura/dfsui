@@ -2,8 +2,3 @@ name = "dfsui"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static"
-
-# Bind the KV Namespace for caching DataForSEO responses
-[[kv_namespaces]]
-binding = "dfsui"
-id = "7528761058c946cc97467985ab27c46b"
