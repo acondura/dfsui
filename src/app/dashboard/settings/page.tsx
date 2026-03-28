@@ -7,7 +7,15 @@ export const runtime = 'edge';
 
 export default async function SettingsPage() {
   const { env } = getRequestContext() as { env: CloudflareEnv };
-  const { teamId, teamName, members, isOwner, dfsUser, dfsPass, isConnected } = await getTeamContext(env);
+  
+  // Fix: Nested destructuring to match the new getTeamContext structure
+  const { 
+    activeTeam: { id: teamId, name: teamName, isOwner }, 
+    members, 
+    dfsUser, 
+    dfsPass, 
+    isConnected 
+  } = await getTeamContext(env);
 
   let balance = 0;
   if (isConnected && dfsUser && dfsPass) {
@@ -47,6 +55,7 @@ export default async function SettingsPage() {
             {members.map((m) => (
               <div key={m} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="text-xs font-bold text-slate-700">{m}</span>
+                {/* Highlight the creator/owner */}
                 {m === members[0] && <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded">OWNER</span>}
               </div>
             ))}
@@ -54,7 +63,7 @@ export default async function SettingsPage() {
           {isOwner && (
             <form action={addMember} className="mt-6 flex gap-2">
               <input name="email" type="email" placeholder="user@email.com" className="flex-1 px-4 py-2 bg-slate-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20" required />
-              <button type="submit" className="px-4 py-2 bg-slate-900 text-white text-[10px] font-black rounded-xl">ADD</button>
+              <button type="submit" className="px-4 py-2 bg-slate-900 text-white text-[10px] font-black rounded-xl hover:bg-blue-600 transition-colors">ADD</button>
             </form>
           )}
         </div>
@@ -63,8 +72,8 @@ export default async function SettingsPage() {
         <div className="bg-blue-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-200">
           <h3 className="text-xs font-black uppercase tracking-widest text-blue-200 mb-6">Create New Workspace</h3>
           <form action={createTeam} className="space-y-4">
-            <input name="teamName" type="text" placeholder="Team Name" className="w-full px-5 py-3 bg-white/10 border border-white/20 rounded-2xl text-sm placeholder:text-white/40 outline-none focus:bg-white/20 transition-all" required />
-            <button type="submit" className="w-full py-3 bg-white text-blue-600 font-black text-[10px] uppercase tracking-widest rounded-2xl">Create Team</button>
+            <input name="teamName" type="text" placeholder="e.g. Marketing Team" className="w-full px-5 py-3 bg-white/10 border border-white/20 rounded-2xl text-sm placeholder:text-white/40 outline-none focus:bg-white/20 transition-all" required />
+            <button type="submit" className="w-full py-3 bg-white text-blue-600 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-colors">Create Team</button>
           </form>
         </div>
       </div>
@@ -75,25 +84,36 @@ export default async function SettingsPage() {
         <form action={updateSettings} className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
-            <input name="login" type="text" defaultValue={dfsUser || ''} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" />
+            <input name="login" type="text" defaultValue={dfsUser || ''} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
-            <input name="password" type="password" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" placeholder={dfsPass ? "••••••••" : ""} />
+            <input name="password" type="password" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors" placeholder={dfsPass ? "••••••••" : ""} />
           </div>
-          <button type="submit" className="md:col-span-2 py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em]">Update Team Credentials</button>
+          <button type="submit" className="md:col-span-2 py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-blue-600 transition-all active:scale-[0.98]">
+            Update Team Credentials
+          </button>
         </form>
       </div>
 
       {/* 4. Danger Zone (Delete Team) */}
       {isOwner && teamId.startsWith('team-') && (
-        <div className="bg-red-50 border border-red-100 rounded-[2rem] p-10 flex justify-between items-center">
-          <div>
+        <div className="bg-red-50 border border-red-100 rounded-[2rem] p-10 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="max-w-md">
             <h2 className="text-red-600 font-black text-xs uppercase tracking-widest mb-1">Delete Workspace</h2>
-            <p className="text-xs text-red-700/60 font-semibold">{members.length > 1 ? "Remove all other members before deleting." : "This will permanently wipe this workspace's data."}</p>
+            <p className="text-xs text-red-700/60 font-semibold leading-relaxed">
+              {members.length > 1 
+                ? "You cannot delete a workspace that still has members. Please remove all other users first." 
+                : "This action is permanent. All credentials and cached data for this workspace will be deleted."}
+            </p>
           </div>
           <form action={deleteTeam}>
-            <button disabled={members.length > 1} className="px-8 py-4 bg-white border border-red-200 text-red-600 text-[10px] font-black uppercase rounded-2xl disabled:opacity-30">Delete Team</button>
+            <button 
+              disabled={members.length > 1} 
+              className="px-8 py-4 bg-white border border-red-200 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-sm disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-red-600"
+            >
+              Delete Team
+            </button>
           </form>
         </div>
       )}

@@ -7,10 +7,20 @@ export const runtime = 'edge';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { env } = getRequestContext() as { env: CloudflareEnv };
-  const { email, teamId, dfsUser, dfsPass, isConnected, isPersonal } = await getTeamContext(env);
+  
+  // Destructuring the new extended context from getTeamContext
+  const { 
+    email, 
+    activeTeam, 
+    allTeams, 
+    dfsUser, 
+    dfsPass, 
+    isConnected 
+  } = await getTeamContext(env);
 
   let balance = "0.00";
 
+  // Fetch balance for the active workspace
   if (isConnected && dfsUser && dfsPass) {
     try {
       const auth = btoa(`${dfsUser}:${dfsPass}`);
@@ -30,13 +40,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased">
-      <Sidebar />
+      {/* Passing all available teams and the active ID to the Sidebar Switcher */}
+      <Sidebar allTeams={allTeams} activeTeamId={activeTeam.id} />
+      
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0 z-10">
           <div className="flex items-center gap-4">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Workspace:</span>
             <div className="bg-slate-100 px-3 py-1 rounded-lg text-sm font-bold text-slate-700">
-              {isPersonal ? 'Personal' : teamId.split('@')[0]}
+              {activeTeam.name}
             </div>
           </div>
           
@@ -60,6 +72,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <p className="text-[10px] font-bold text-slate-400 uppercase">User Identity</p>
                 <p className="text-xs font-mono font-bold text-slate-900 truncate lowercase">{email}</p>
+              </div>
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Workspace ID</p>
+                <p className="text-[10px] font-mono font-medium text-slate-500 truncate">{activeTeam.id}</p>
               </div>
             </div>
           </aside>
