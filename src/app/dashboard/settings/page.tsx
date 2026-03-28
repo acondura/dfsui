@@ -5,6 +5,11 @@ import { updateSettings, deleteCredentials } from './actions';
 
 export const runtime = 'edge';
 
+// Define the shape of your Cloudflare Environment to satisfy the linter
+interface CloudflareEnv {
+  dfsui: KVNamespace;
+}
+
 interface DFUserResponse {
   tasks?: Array<{
     result?: Array<{
@@ -24,7 +29,6 @@ function getIdentity(headersList: Headers): string {
   if (jwt) {
     try {
       const payload = jwt.split('.')[1];
-      // Use globalThis.atob for better environment compatibility
       const decoded = JSON.parse(globalThis.atob(payload));
       if (decoded.email) return decoded.email.toLowerCase();
     } catch (e) {
@@ -38,9 +42,9 @@ export default async function SettingsPage() {
   const headersList = await headers();
   const email = getIdentity(headersList);
   
-  // Cast env to any to bypass strict build-time check if bindings aren't fully resolved
   const context = getRequestContext();
-  const env = context?.env as any;
+  // Use the interface instead of 'any' to fix the lint error
+  const env = context?.env as CloudflareEnv;
 
   // Binding Guard
   if (!env || !env.dfsui) {
@@ -115,6 +119,19 @@ export default async function SettingsPage() {
               </button>
            </form>
         </div>
+      </div>
+
+      {/* Danger Zone Restored */}
+      <div className="bg-red-50 border border-red-100 rounded-[2rem] p-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <div className="max-w-md">
+           <h2 className="text-red-600 font-black text-xs uppercase tracking-widest mb-2">Danger Zone</h2>
+           <p className="text-xs text-red-700/60 font-semibold leading-relaxed">Disconnecting removes Edge cache keys. All SEO tools will deactivate immediately.</p>
+        </div>
+        <form action={deleteCredentials}>
+          <button type="submit" className="px-8 py-4 bg-white border border-red-200 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
+            Disconnect
+          </button>
+        </form>
       </div>
     </div>
   );
