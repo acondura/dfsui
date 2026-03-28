@@ -5,7 +5,6 @@ import { updateSettings, deleteCredentials } from './actions';
 
 export const runtime = 'edge';
 
-// Define the shape of your Cloudflare Environment to satisfy the linter
 interface CloudflareEnv {
   dfsui: KVNamespace;
 }
@@ -18,7 +17,6 @@ interface DFUserResponse {
   }>;
 }
 
-// Robust identity helper for build stability
 function getIdentity(headersList: Headers): string {
   const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
                       headersList.get('Cf-Access-Authenticated-User-Email');
@@ -31,9 +29,7 @@ function getIdentity(headersList: Headers): string {
       const payload = jwt.split('.')[1];
       const decoded = JSON.parse(globalThis.atob(payload));
       if (decoded.email) return decoded.email.toLowerCase();
-    } catch (e) {
-      return 'user';
-    }
+    } catch (e) { return 'user'; }
   }
   return 'user';
 }
@@ -43,17 +39,13 @@ export default async function SettingsPage() {
   const email = getIdentity(headersList);
   
   const context = getRequestContext();
-  // Use the interface instead of 'any' to fix the lint error
   const env = context?.env as CloudflareEnv;
 
-  // Binding Guard
   if (!env || !env.dfsui) {
     return (
       <div className="max-w-2xl p-12 bg-white border border-red-100 rounded-[2.5rem] shadow-xl">
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">Binding Missing</h1>
-        <p className="mt-4 text-slate-500 font-medium">
-          The KV namespace <code className="bg-slate-100 px-2 py-1 rounded text-red-600">dfsui</code> is not bound to this environment.
-        </p>
+        <p className="mt-4 text-slate-500 font-medium">No KV namespace bound.</p>
       </div>
     );
   }
@@ -77,9 +69,7 @@ export default async function SettingsPage() {
         balance = data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0;
         status = 'CONNECTED';
       }
-    } catch (e) {
-      status = 'ERROR';
-    }
+    } catch (e) { status = 'ERROR'; }
   }
 
   return (
@@ -87,41 +77,46 @@ export default async function SettingsPage() {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Settings</h1>
-          <p className="text-slate-500 text-sm mt-1 font-medium italic">Identification: {email}</p>
+          <p className="text-slate-500 text-sm mt-1 font-medium italic">Manage your DataForSEO API connection</p>
         </div>
-        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest border ${status === 'CONNECTED' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-red-50 border-red-200 text-red-600'}`}>
+        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest border transition-all ${status === 'CONNECTED' ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm' : 'bg-red-50 border-red-200 text-red-600'}`}>
           {status}
         </div>
       </div>
 
-      <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white border border-slate-800">
-        <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em]">Total Available Credits</p>
-        <div className="mt-4 flex items-center gap-4">
-          <span className="text-6xl font-mono font-bold tracking-tighter leading-none">${balance.toFixed(2)}</span>
+      {/* Balance Card */}
+      <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white border border-slate-800 relative overflow-hidden group">
+        <div className="relative z-10">
+          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em]">Total Available Credits</p>
+          <div className="mt-4 flex items-center gap-4">
+            <span className="text-6xl font-mono font-bold tracking-tighter leading-none">${balance.toFixed(2)}</span>
+            <span className="text-slate-400 text-xs font-bold leading-tight">USD<br/>BALANCE</span>
+          </div>
         </div>
       </div>
 
+      {/* Form Container */}
       <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm p-1">
         <div className="bg-[#f8fafc] rounded-[2.2rem] p-10">
            <form action={updateSettings} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">API Username</label>
-                  <input name="login" type="text" defaultValue={dfsUser || ''} className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold" />
+                  <input name="login" type="text" defaultValue={dfsUser || ''} className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold focus:ring-4 focus:ring-blue-500/10 transition-all" />
                 </div>
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">API Password</label>
-                  <input name="password" type="password" className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold" placeholder={dfsPass ? "••••••••" : ""} />
+                  <input name="password" type="password" className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold focus:ring-4 focus:ring-blue-500/10 transition-all" placeholder={dfsPass ? "••••••••" : ""} />
                 </div>
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-blue-700 transition-all">
+              <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-[0.98]">
                 Update Credentials
               </button>
            </form>
         </div>
       </div>
 
-      {/* Danger Zone Restored */}
+      {/* Danger Zone */}
       <div className="bg-red-50 border border-red-100 rounded-[2rem] p-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div className="max-w-md">
            <h2 className="text-red-600 font-black text-xs uppercase tracking-widest mb-2">Danger Zone</h2>
