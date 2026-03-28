@@ -3,7 +3,8 @@ import Sidebar from '@/components/Sidebar';
 import { headers } from 'next/headers';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 
-// 1. Add this interface to define the DataForSEO response
+export const runtime = 'edge';
+
 interface DFUserResponse {
   tasks?: Array<{
     result?: Array<{
@@ -16,9 +17,16 @@ interface DFUserResponse {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers();
-  const email = headersList.get('Cf-Access-Authenticated-User-Email') || 'User';
+  
+  // Robust case-insensitive email check for Dev and Prod
+  const email = 
+    headersList.get('cf-access-authenticated-user-email') || 
+    headersList.get('Cf-Access-Authenticated-User-Email') || 
+    'User';
+    
   const { env } = getRequestContext();
 
+  // Fetch keys using the lowercase email key to stay consistent
   const dfsUser = await env.dfsui.get(`${email}:credentials:dfs-user`);
   const dfsPass = await env.dfsui.get(`${email}:credentials:dfs-pass`);
   let balance = "0.00";
@@ -32,7 +40,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       });
       
       if (res.ok) {
-        // 2. Change 'as any' to your new interface
         const data = await res.json() as DFUserResponse;
         balance = (data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0).toFixed(2);
       }
@@ -42,39 +49,46 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header with Persistent Balance */}
-        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0">
+        {/* Persistent Polished Header */}
+        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0 z-10">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-500">Welcome, <b className="text-slate-900">{email}</b></span>
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">Active Session:</span>
+            <b className="text-sm text-slate-900">{email}</b>
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-lg shadow-sm">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-200">
               <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Balance</span>
               <span className="text-sm font-mono font-bold">${balance}</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" />
             </div>
           </div>
         </header>
 
         <div className="flex-1 flex overflow-hidden relative">
-          <main className="flex-1 overflow-y-auto p-8">
-            <div className="max-w-6xl mx-auto">
+          <main className="flex-1 overflow-y-auto p-8 lg:p-12">
+            <div className="max-w-5xl mx-auto">
               {children}
             </div>
           </main>
           
-          {/* Activity Feed Sidebar */}
-          <aside className="hidden xl:flex w-80 border-l border-slate-200 bg-white flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Activity Feed</h2>
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          {/* Right Activity Sidebar */}
+          <aside className="hidden 2xl:flex w-80 border-l border-slate-200 bg-white flex-col shrink-0">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Activity History</h2>
+              <div className="flex gap-1">
+                <span className="w-1 h-1 rounded-full bg-slate-200" />
+                <span className="w-1 h-1 rounded-full bg-slate-200" />
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="p-3 rounded-xl border border-slate-100 bg-slate-50 text-[11px] text-slate-500">
-                Latest 10 actions will appear here.
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="relative pl-6 border-l border-slate-100">
+                <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-white" />
+                <p className="text-[11px] font-bold text-slate-900">System Ready</p>
+                <p className="text-[11px] text-slate-500 mt-1">Waiting for user actions...</p>
               </div>
             </div>
           </aside>
