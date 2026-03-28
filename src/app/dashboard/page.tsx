@@ -13,13 +13,16 @@ interface DFUserResponse {
 }
 
 export default async function DashboardPage() {
+  // Robust extraction helper
   const headersList = await headers();
-  
-  // Consistent lowercase check for identity
-  const email = 
+
+  const email = (
     headersList.get('cf-access-authenticated-user-email') || 
     headersList.get('Cf-Access-Authenticated-User-Email') || 
-    'User';
+    headersList.get('x-forwarded-user') || 
+    // Fallback: If we have a JWT but no email header, Cloudflare is in 'Secure' mode
+    (headersList.has('cf-access-jwt-assertion') ? 'Authenticated User' : 'User')
+  ).toLowerCase(); // Normalize to lowercase for KV lookups
 
   const { env } = getRequestContext();
 
