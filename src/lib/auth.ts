@@ -5,8 +5,16 @@ export interface CloudflareEnv {
   dfsui: KVNamespace;
 }
 
+export interface DFUserResponse {
+  tasks?: Array<{
+    result?: Array<{
+      money?: { balance?: number; };
+    }>;
+  }>;
+}
+
 /**
- * Robustly extracts the user's email from Cloudflare Access headers or JWT
+ * Robustly extracts the user's email from Cloudflare headers or JWT
  */
 export async function getIdentity(): Promise<string> {
   const headersList = await headers();
@@ -46,7 +54,7 @@ export async function getTeamContext(env: CloudflareEnv) {
     teamId,
     dfsUser,
     dfsPass,
-    // Helper to check if the team is fully set up
-    isConnected: !!(dfsUser && dfsPass)
+    isConnected: !!(dfsUser && dfsPass),
+    isPersonal: teamId === email
   };
 }

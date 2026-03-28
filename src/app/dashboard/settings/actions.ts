@@ -23,12 +23,15 @@ export async function updateSettings(formData: FormData) {
 
 export async function deleteCredentials() {
   const { env } = getRequestContext() as { env: CloudflareEnv };
-  const { teamId } = await getTeamContext(env);
+  const { email, teamId, isPersonal } = await getTeamContext(env);
 
-  if (teamId === 'user') throw new Error('Unauthorized');
-
-  await env.dfsui.delete(`team:${teamId}:dfs-user`);
-  await env.dfsui.delete(`team:${teamId}:dfs-pass`);
+  if (isPersonal) {
+    await env.dfsui.delete(`team:${teamId}:dfs-user`);
+    await env.dfsui.delete(`team:${teamId}:dfs-pass`);
+  } else {
+    // Shared Team: Only disconnect the user from the workspace
+    await env.dfsui.delete(`user:${email}:active-team`);
+  }
 
   revalidatePath('/dashboard');
   redirect('/dashboard/settings');
