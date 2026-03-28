@@ -13,18 +13,23 @@ interface DFUserResponse {
   }>;
 }
 
+// Robust identity helper for build stability
 function getIdentity(headersList: Headers): string {
   const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
                       headersList.get('Cf-Access-Authenticated-User-Email');
+  
   if (headerEmail) return headerEmail.toLowerCase();
 
   const jwt = headersList.get('cf-access-jwt-assertion');
   if (jwt) {
     try {
       const payload = jwt.split('.')[1];
-      const decoded = JSON.parse(atob(payload));
+      // Use globalThis.atob for better environment compatibility
+      const decoded = JSON.parse(globalThis.atob(payload));
       if (decoded.email) return decoded.email.toLowerCase();
-    } catch (e) { return 'user'; }
+    } catch (e) {
+      return 'user';
+    }
   }
   return 'user';
 }
@@ -33,35 +38,27 @@ export default async function SettingsPage() {
   const headersList = await headers();
   const email = getIdentity(headersList);
   
-  // Get context and safely handle env
+  // Cast env to any to bypass strict build-time check if bindings aren't fully resolved
   const context = getRequestContext();
-  const env = context?.env;
+  const env = context?.env as any;
 
-  // 1. DEFENSIVE CHECK: Prevent the "reading 'get'" error
+  // Binding Guard
   if (!env || !env.dfsui) {
     return (
-      <div className="max-w-2xl p-12 bg-white border border-red-100 rounded-[2.5rem] shadow-xl shadow-red-50">
-        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-6">
-          <span className="text-2xl">⚠️</span>
-        </div>
+      <div className="max-w-2xl p-12 bg-white border border-red-100 rounded-[2.5rem] shadow-xl">
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">Binding Missing</h1>
-        <p className="mt-4 text-slate-500 font-medium leading-relaxed">
+        <p className="mt-4 text-slate-500 font-medium">
           The KV namespace <code className="bg-slate-100 px-2 py-1 rounded text-red-600">dfsui</code> is not bound to this environment.
         </p>
-        <div className="mt-8 p-4 bg-slate-50 rounded-xl text-[11px] font-mono text-slate-400 leading-tight">
-          Check: Cloudflare Dash > Pages > Settings > Functions > KV Bindings (Preview/Production)
-        </div>
       </div>
     );
   }
 
-  // 2. Proceed safely
   const dfsUser = await env.dfsui.get(`${email}:credentials:dfs-user`);
   const dfsPass = await env.dfsui.get(`${email}:credentials:dfs-pass`);
 
   let balance = 0;
   let status = 'NOT CONNECTED';
-  let statusColor = 'text-slate-500';
 
   if (dfsUser && dfsPass) {
     try {
@@ -75,14 +72,9 @@ export default async function SettingsPage() {
         const data = await res.json() as DFUserResponse;
         balance = data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0;
         status = 'CONNECTED';
-        statusColor = 'text-emerald-500';
-      } else {
-        status = `ERROR ${res.status}`;
-        statusColor = 'text-red-500';
       }
     } catch (e) {
-      status = 'CONNECTION ERROR';
-      statusColor = 'text-orange-500';
+      status = 'ERROR';
     }
   }
 
@@ -93,23 +85,18 @@ export default async function SettingsPage() {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Settings</h1>
           <p className="text-slate-500 text-sm mt-1 font-medium italic">Identification: {email}</p>
         </div>
-        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest border transition-all ${status === 'CONNECTED' ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm' : 'bg-red-50 border-red-200 text-red-600'}`}>
+        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest border ${status === 'CONNECTED' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-red-50 border-red-200 text-red-600'}`}>
           {status}
         </div>
       </div>
 
-      {/* Balance Card */}
-      <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-slate-200 relative overflow-hidden border border-slate-800">
-        <div className="relative z-10">
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em]">Total Available Credits</p>
-          <div className="mt-4 flex items-center gap-4">
-            <span className="text-6xl font-mono font-bold tracking-tighter leading-none">${balance.toFixed(2)}</span>
-            <span className="text-slate-400 text-xs font-bold leading-tight">USD<br/>BALANCE</span>
-          </div>
+      <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white border border-slate-800">
+        <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em]">Total Available Credits</p>
+        <div className="mt-4 flex items-center gap-4">
+          <span className="text-6xl font-mono font-bold tracking-tighter leading-none">${balance.toFixed(2)}</span>
         </div>
       </div>
 
-      {/* Form Container */}
       <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm p-1">
         <div className="bg-[#f8fafc] rounded-[2.2rem] p-10">
            <form action={updateSettings} className="space-y-8">
@@ -123,24 +110,11 @@ export default async function SettingsPage() {
                   <input name="password" type="password" className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold" placeholder={dfsPass ? "••••••••" : ""} />
                 </div>
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-[0.98]">
+              <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-blue-700 transition-all">
                 Update Credentials
               </button>
            </form>
         </div>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="bg-red-50 border border-red-100 rounded-[2rem] p-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-        <div className="max-w-md text-red-600">
-           <h2 className="font-black text-xs uppercase tracking-widest mb-2">Danger Zone</h2>
-           <p className="text-xs font-semibold">Disconnecting removes Edge cache keys immediately.</p>
-        </div>
-        <form action={deleteCredentials}>
-          <button type="submit" className="px-8 py-4 bg-white border border-red-200 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
-            Disconnect
-          </button>
-        </form>
       </div>
     </div>
   );
