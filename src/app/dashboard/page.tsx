@@ -40,8 +40,12 @@ export default async function DashboardPage() {
   let balance = "---";
 
   if (env.dfsui && email !== 'user') {
-    const dfsUser = await env.dfsui.get(`${email}:credentials:dfs-user`);
-    const dfsPass = await env.dfsui.get(`${email}:credentials:dfs-pass`);
+    // Resolve Team ID (Default to personal email)
+    const teamId = await env.dfsui.get(`user:${email}:active-team`) || email;
+
+    // Fetch credentials for the resolved Team context
+    const dfsUser = await env.dfsui.get(`team:${teamId}:dfs-user`);
+    const dfsPass = await env.dfsui.get(`team:${teamId}:dfs-pass`);
 
     if (dfsUser && dfsPass) {
       try {
@@ -53,7 +57,7 @@ export default async function DashboardPage() {
         const data = await res.json() as DFUserResponse;
         balance = (data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0).toFixed(2);
       } catch (e) {
-        console.error("Dashboard fetch error");
+        console.error("Dashboard balance fetch error");
       }
     }
   }

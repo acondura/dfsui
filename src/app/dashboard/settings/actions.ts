@@ -2,36 +2,33 @@
 'use server'
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTeamContext, CloudflareEnv } from '@/lib/auth';
 
 export async function updateSettings(formData: FormData) {
   const user = formData.get('login') as string;
   const pass = formData.get('password') as string;
+  const { env } = getRequestContext() as { env: CloudflareEnv };
   
-  const headersList = await headers();
-  const email = headersList.get('Cf-Access-Authenticated-User-Email');
-  if (!email || !user || !pass) return;
+  const { teamId } = await getTeamContext(env);
+  
+  if (teamId === 'user' || !user || !pass) return;
 
-  const { env } = getRequestContext();
+  await env.dfsui.put(`team:${teamId}:dfs-user`, user);
+  await env.dfsui.put(`team:${teamId}:dfs-pass`, pass);
   
-  await env.dfsui.put(`${email}:credentials:dfs-user`, user);
-  await env.dfsui.put(`${email}:credentials:dfs-pass`, pass);
-  
-  revalidatePath('/dashboard/settings');
+  revalidatePath('/dashboard');
 }
 
 export async function deleteCredentials() {
-  const headersList = await headers();
-  const email = headersList.get('Cf-Access-Authenticated-User-Email');
-  if (!email) throw new Error('Unauthorized');
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  const { teamId } = await getTeamContext(env);
 
-  const { env } = getRequestContext();
+  if (teamId === 'user') throw new Error('Unauthorized');
 
-  // Wipe the granular keys
-  await env.dfsui.delete(`${email}:credentials:dfs-user`);
-  await env.dfsui.delete(`${email}:credentials:dfs-pass`);
+  await env.dfsui.delete(`team:${teamId}:dfs-user`);
+  await env.dfsui.delete(`team:${teamId}:dfs-pass`);
 
   revalidatePath('/dashboard');
   redirect('/dashboard/settings');

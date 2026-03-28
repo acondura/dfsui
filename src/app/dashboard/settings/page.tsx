@@ -17,6 +17,9 @@ interface DFUserResponse {
   }>;
 }
 
+/**
+ * Robust identity helper to extract user email from Cloudflare headers or JWT
+ */
 function getIdentity(headersList: Headers): string {
   const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
                       headersList.get('Cf-Access-Authenticated-User-Email');
@@ -50,8 +53,12 @@ export default async function SettingsPage() {
     );
   }
 
-  const dfsUser = await env.dfsui.get(`${email}:credentials:dfs-user`);
-  const dfsPass = await env.dfsui.get(`${email}:credentials:dfs-pass`);
+  // 1. Resolve the Team ID (Default to personal email)
+  const teamId = await env.dfsui.get(`user:${email}:active-team`) || email;
+
+  // 2. Lookup credentials using the TEAM prefix
+  const dfsUser = await env.dfsui.get(`team:${teamId}:dfs-user`);
+  const dfsPass = await env.dfsui.get(`team:${teamId}:dfs-pass`);
 
   let balance = 0;
   let status = 'NOT CONNECTED';
@@ -77,7 +84,9 @@ export default async function SettingsPage() {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Settings</h1>
-          <p className="text-slate-500 text-sm mt-1 font-medium italic">Manage your DataForSEO API connection</p>
+          <p className="text-slate-500 text-sm mt-1 font-medium italic lowercase">
+            Workspace: {teamId.split('@')[0]}
+          </p>
         </div>
         <div className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest border transition-all ${status === 'CONNECTED' ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm' : 'bg-red-50 border-red-200 text-red-600'}`}>
           {status}
@@ -102,11 +111,21 @@ export default async function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">API Username</label>
-                  <input name="login" type="text" defaultValue={dfsUser || ''} className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold focus:ring-4 focus:ring-blue-500/10 transition-all" />
+                  <input 
+                    name="login" 
+                    type="text" 
+                    defaultValue={dfsUser || ''} 
+                    className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm" 
+                  />
                 </div>
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">API Password</label>
-                  <input name="password" type="password" className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold focus:ring-4 focus:ring-blue-500/10 transition-all" placeholder={dfsPass ? "••••••••" : ""} />
+                  <input 
+                    name="password" 
+                    type="password" 
+                    className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm" 
+                    placeholder={dfsPass ? "••••••••" : ""} 
+                  />
                 </div>
               </div>
               <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-[0.98]">
