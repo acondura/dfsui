@@ -47,7 +47,6 @@ export default async function SettingsPage() {
 
       {/* 2. Team Management Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Members List */}
         <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
           <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6">Team Members</h3>
           <div className="space-y-4">
@@ -66,7 +65,6 @@ export default async function SettingsPage() {
           )}
         </div>
 
-        {/* Create New Team */}
         <div className="bg-blue-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-200">
           <h3 className="text-xs font-black uppercase tracking-widest text-blue-200 mb-6">Create New Workspace</h3>
           <form action={createTeam} className="space-y-4">
@@ -78,10 +76,10 @@ export default async function SettingsPage() {
 
       {/* 3. API Credentials (Targeting Active Team) */}
       <div className="bg-white border border-slate-200 rounded-[2.5rem] p-10 shadow-sm relative overflow-hidden">
-        {/* Visual feedback for non-owners */}
+        {/* The "Locked" Overlay */}
         {!isOwner && (
-          <div className="absolute inset-0 bg-slate-50/40 backdrop-blur-[1px] z-20 flex items-center justify-center">
-            <div className="bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-xl">
+          <div className="absolute inset-0 bg-slate-50/90 backdrop-blur-md z-20 flex items-center justify-center">
+            <div className="bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-2xl">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                 🔒 View Only Mode
               </p>
@@ -96,9 +94,10 @@ export default async function SettingsPage() {
             <input 
               name="login" 
               type="text" 
-              defaultValue={dfsUser || ''} 
+              // THE FIX: If not owner, defaultValue is always an empty string
+              defaultValue={isOwner ? (dfsUser || '') : ''} 
               disabled={!isOwner}
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors disabled:opacity-50" 
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors disabled:opacity-0" 
             />
           </div>
           <div className="space-y-2">
@@ -107,8 +106,9 @@ export default async function SettingsPage() {
               name="password" 
               type="password" 
               disabled={!isOwner}
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors disabled:opacity-50" 
-              placeholder={dfsPass ? "••••••••" : "Not set"} 
+              // THE FIX: No dots placeholder if not owner
+              placeholder={isOwner && dfsPass ? "••••••••" : ""} 
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors disabled:opacity-0" 
             />
           </div>
           
