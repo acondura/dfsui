@@ -1,106 +1,86 @@
 // src/app/dashboard/layout.tsx
 import Sidebar from '@/components/Sidebar';
-import { headers } from 'next/headers';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getTeamContext, CloudflareEnv, DFUserResponse } from '@/lib/auth';
 
 export const runtime = 'edge';
 
-interface DFUserResponse {
-  tasks?: Array<{
-    result?: Array<{
-      money?: { balance?: number; };
-    }>;
-  }>;
-}
-
-// Helper to extract identity from standard headers or JWT
-function getIdentity(headersList: Headers): string {
-  const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
-                      headersList.get('Cf-Access-Authenticated-User-Email') ||
-                      headersList.get('x-forwarded-user');
-  
-  if (headerEmail) return headerEmail.toLowerCase();
-
-  // Bulletproof fallback: Decode JWT if headers are stripped
-  const jwt = headersList.get('cf-access-jwt-assertion');
-  if (jwt) {
-    try {
-      const payload = jwt.split('.')[1];
-      const decoded = JSON.parse(atob(payload));
-      if (decoded.email) return decoded.email.toLowerCase();
-    } catch (e) {
-      console.error("JWT Decode failed");
-    }
-  }
-
-  return 'user';
-}
-
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const headersList = await headers();
-  const email = getIdentity(headersList);
-  const { env } = getRequestContext();
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  
+  const { 
+    email, 
+    activeTeam, 
+    allTeams, 
+    dfsUser, 
+    dfsPass, 
+    isConnected 
+  } = await getTeamContext(env);
 
   let balance = "0.00";
 
-  // Safeguard: only fetch if KV is bound (Production check)
-  if (env.dfsui && email !== 'user') {
-    const dfsUser = await env.dfsui.get(`${email}:credentials:dfs-user`);
-    const dfsPass = await env.dfsui.get(`${email}:credentials:dfs-pass`);
-
-    if (dfsUser && dfsPass) {
-      try {
-        const auth = btoa(`${dfsUser}:${dfsPass}`);
-        const res = await fetch('https://api.dataforseo.com/v3/appendix/user_data', {
-          headers: { 'Authorization': `Basic ${auth}` },
-          next: { revalidate: 60 } 
-        });
-        
-        if (res.ok) {
-          const data = await res.json() as DFUserResponse;
-          balance = (data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0).toFixed(2);
-        }
-      } catch (e) {
-        console.error("Header balance fetch failed");
+  if (isConnected && dfsUser && dfsPass) {
+    try {
+      const auth = btoa(`${dfsUser}:${dfsPass}`);
+      const res = await fetch('https://api.dataforseo.com/v3/appendix/user_data', {
+        headers: { 'Authorization': `Basic ${auth}` },
+        next: { revalidate: 60 } 
+      });
+      
+      if (res.ok) {
+        const data = await res.json() as DFUserResponse;
+        balance = (data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0).toFixed(2);
       }
+    } catch (e) {
+      console.error("Balance fetch failed");
     }
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0 z-10">
-          <div className="flex items-center gap-4">
-            <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">Active Session:</span>
-            <b className="text-sm text-slate-900 lowercase">{email}</b>
+    // Outer frame with dark background
+    <div className="flex h-screen bg-slate-950 text-slate-900 font-sans antialiased overflow-hidden">
+      <Sidebar allTeams={allTeams} activeTeamId={activeTeam.id} />
+      
+      {/* Inner container with rounded corners and shadow */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 rounded-tl-[3rem] my-2 mr-2 shadow-2xl">
+        <header className="h-20 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center justify-between px-10 shrink-0 z-10">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Context</span>
+            <span className="text-sm font-bold text-slate-900 lowercase">{activeTeam.name}</span>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-200 transition-transform active:scale-95">
-              <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Balance</span>
-              <span className="text-sm font-mono font-bold">${balance}</span>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 px-5 py-2.5 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200 transition-transform active:scale-95">
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Balance</span>
+              <span className="text-base font-mono font-bold">${balance}</span>
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" />
+            </div>
+            
+            <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 font-black text-xs">
+              {email[0].toUpperCase()}
             </div>
           </div>
         </header>
 
         <div className="flex-1 flex overflow-hidden relative">
-          <main className="flex-1 overflow-y-auto p-8 lg:p-12 bg-[#f8fafc]">
+          <main className="flex-1 overflow-y-auto p-10 lg:p-16">
             <div className="max-w-5xl mx-auto">
               {children}
             </div>
           </main>
           
-          <aside className="hidden 2xl:flex w-80 border-l border-slate-200 bg-white flex-col shrink-0">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Activity History</h2>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              <div className="relative pl-6 border-l border-slate-100">
-                <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-white shadow-sm" />
-                <p className="text-[11px] font-bold text-slate-900">System Ready</p>
-                <p className="text-[11px] text-slate-500 mt-1">Authenticated via {email.includes('@') ? 'Cloudflare Access' : 'Default'}</p>
+          <aside className="hidden 2xl:flex w-80 border-l border-slate-200 bg-white p-8 flex-col gap-8">
+            <div className="space-y-4">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Environment</h2>
+              <div className="p-5 bg-slate-50 rounded-3xl border border-slate-100 space-y-3">
+                <div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">User Identity</p>
+                  <p className="text-xs font-mono font-bold text-slate-900 truncate lowercase mt-1">{email}</p>
+                </div>
+                <div className="pt-3 border-t border-slate-200/50">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Workspace ID</p>
+                  <p className="text-[10px] font-mono font-medium text-slate-500 truncate mt-1">{activeTeam.id}</p>
+                </div>
               </div>
             </div>
           </aside>
