@@ -4,6 +4,7 @@ import { importJWK, jwtVerify } from 'jose';
 
 export interface CloudflareEnv {
   dfsui: KVNamespace;
+  NEXT_PUBLIC_CF_TEAM_DOMAIN?: string;
 }
 
 export interface DFUserResponse {
@@ -20,7 +21,6 @@ export interface Team {
   isOwner: boolean;
 }
 
-// Fixed: Replaced 'any' with 'unknown' to satisfy the linter
 interface JWKSResponse {
   keys: Array<{
     kty: string;
@@ -33,26 +33,26 @@ interface JWKSResponse {
   }>;
 }
 
-async function verifyAccessJwt(jwt: string): Promise<string | null> {
-  const teamDomain = process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN;
+/**
+ * Validates the Cloudflare Access JWT using the environment domain.
+ */
+async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string | null> {
+  // Access variable from Cloudflare env bindings (Prod) or process.env (Dev)
+  const teamDomain = env.NEXT_PUBLIC_CF_TEAM_DOMAIN || process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN;
+  
   if (!teamDomain) {
-    console.error("Missing NEXT_PUBLIC_CF_TEAM_DOMAIN");
+    console.error("Missing NEXT_PUBLIC_CF_TEAM_DOMAIN in environment");
     return null;
   }
 
   try {
     const certsUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`;
-    
     const response = await fetch(certsUrl);
     const { keys } = (await response.json()) as JWKSResponse;
     
-    if (!keys || keys.length === 0) {
-      console.error("No keys found in JWKS");
-      return null;
-    }
+    if (!keys || keys.length === 0) return null;
     
     const jwk = keys[0]; 
-    // importJWK expects a standard JWK object; unknown works here.
     const publicKey = await importJWK(jwk, 'RS256');
     
     const { payload } = await jwtVerify(jwt, publicKey, {
@@ -66,12 +66,15 @@ async function verifyAccessJwt(jwt: string): Promise<string | null> {
   }
 }
 
-export async function getIdentity(): Promise<string> {
+/**
+ * Extracts and verifies the user's identity.
+ */
+export async function getIdentity(env: CloudflareEnv): Promise<string> {
   const headersList = await headers();
   const jwt = headersList.get('cf-access-jwt-assertion');
 
   if (jwt) {
-    const verifiedEmail = await verifyAccessJwt(jwt);
+    const verifiedEmail = await verifyAccessJwt(jwt, env);
     if (verifiedEmail) return verifiedEmail;
   }
 
@@ -81,8 +84,11 @@ export async function getIdentity(): Promise<string> {
   return headerEmail?.toLowerCase() || 'user';
 }
 
+/**
+ * Resolves the full context for the current user and their active team.
+ */
 export async function getTeamContext(env: CloudflareEnv) {
-  const email = await getIdentity();
+  const email = await getIdentity(env);
   const activeTeamId = await env.dfsui.get(`user:${email}:active-team`) || email;
 
   const teamsRaw = await env.dfsui.get(`user:${email}:teams`);
