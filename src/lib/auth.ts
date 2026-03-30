@@ -1,6 +1,6 @@
 // src/lib/auth.ts
 import { headers } from 'next/headers';
-import { importJWK, jwtVerify } from 'jose';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 export interface CloudflareEnv {
   dfsui: KVNamespace;
@@ -21,53 +21,39 @@ export interface Team {
   isOwner: boolean;
 }
 
-interface JWKSResponse {
-  keys: Array<{
-    kty: string;
-    kid: string;
-    use?: string;
-    alg?: string;
-    n?: string;
-    e?: string;
-    [key: string]: unknown; 
-  }>;
-}
-
 /**
- * Validates the Cloudflare Access JWT using the environment domain.
+ * Robustly validates the Cloudflare Access JWT.
+ * createRemoteJWKSet handles fetching and caching the keys automatically.
  */
 async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string | null> {
-  // Access variable from Cloudflare env bindings (Prod) or process.env (Dev)
-  const teamDomain = env.NEXT_PUBLIC_CF_TEAM_DOMAIN || process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN;
+  // Use the env binding (Prod) or process.env (Dev fallback)
+  const teamDomain = (env.NEXT_PUBLIC_CF_TEAM_DOMAIN || process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN || '').trim();
   
   if (!teamDomain) {
-    console.error("Missing NEXT_PUBLIC_CF_TEAM_DOMAIN in environment");
+    console.error("Auth Error: NEXT_PUBLIC_CF_TEAM_DOMAIN is not set in environment variables.");
     return null;
   }
 
   try {
-    const certsUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`;
-    const response = await fetch(certsUrl);
-    const { keys } = (await response.json()) as JWKSResponse;
+    const jwksUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`;
     
-    if (!keys || keys.length === 0) return null;
+    // jose manages the fetch and internal caching of the JWKS
+    const JWKS = createRemoteJWKSet(new URL(jwksUrl));
     
-    const jwk = keys[0]; 
-    const publicKey = await importJWK(jwk, 'RS256');
-    
-    const { payload } = await jwtVerify(jwt, publicKey, {
+    const { payload } = await jwtVerify(jwt, JWKS, {
       issuer: `https://${teamDomain}.cloudflareaccess.com`,
     });
 
     return (payload.email as string)?.toLowerCase() || null;
   } catch (e) {
-    console.error("JWT Verification Failed:", e);
+    // This catches signature mismatches, expired tokens, or network issues
+    console.error("JWT Verification Failed:", e instanceof Error ? e.message : e);
     return null;
   }
 }
 
 /**
- * Extracts and verifies the user's identity.
+ * Extracts and verifies identity. Now requires 'env' to be passed.
  */
 export async function getIdentity(env: CloudflareEnv): Promise<string> {
   const headersList = await headers();
@@ -78,6 +64,7 @@ export async function getIdentity(env: CloudflareEnv): Promise<string> {
     if (verifiedEmail) return verifiedEmail;
   }
 
+  // Final fallback to headers (Useful for development/tunnels)
   const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
                       headersList.get('Cf-Access-Authenticated-User-Email');
   

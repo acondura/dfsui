@@ -9,7 +9,7 @@ import { getTeamContext, CloudflareEnv, getIdentity } from '@/lib/auth';
 export async function createTeam(formData: FormData) {
   const name = formData.get('teamName') as string;
   const { env } = getRequestContext() as { env: CloudflareEnv };
-  const email = await getIdentity(env); // Pass env here
+  const email = await getIdentity(env); // Added env argument
 
   if (!name || email === 'user') return;
 
@@ -48,7 +48,7 @@ export async function addMember(formData: FormData) {
 
 export async function switchTeam(teamId: string) {
   const { env } = getRequestContext() as { env: CloudflareEnv };
-  const email = await getIdentity(env); // Pass env here
+  const email = await getIdentity(env); // Added env argument
   await env.dfsui.put(`user:${email}:active-team`, teamId);
   revalidatePath('/dashboard');
 }
