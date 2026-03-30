@@ -11,6 +11,8 @@ export async function createTeam(formData: FormData) {
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const email = await getIdentity();
 
+  if (!name || email === 'user') return;
+
   const teamId = `team-${crypto.randomUUID().slice(0, 8)}`;
   
   // Set metadata
@@ -34,6 +36,7 @@ export async function addMember(formData: FormData) {
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const { activeTeam, members } = await getTeamContext(env);
 
+  // Security: Only owner can invite members
   if (!activeTeam.isOwner || members.includes(inviteEmail)) return;
 
   // Add to Team members
@@ -60,6 +63,7 @@ export async function deleteTeam() {
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const { email, activeTeam, members } = await getTeamContext(env);
 
+  // Requirement: Only owner can delete, and only if team is empty (except owner)
   if (!activeTeam.isOwner || members.length > 1) return;
 
   // Cleanup
@@ -73,6 +77,7 @@ export async function deleteTeam() {
   const teams = teamsRaw ? (JSON.parse(teamsRaw) as string[]).filter(id => id !== activeTeam.id) : [];
   await env.dfsui.put(`user:${email}:teams`, JSON.stringify(teams));
 
+  // Reset user to personal workspace
   await env.dfsui.put(`user:${email}:active-team`, email);
 
   revalidatePath('/dashboard');
@@ -83,9 +88,18 @@ export async function updateSettings(formData: FormData) {
   const user = formData.get('login') as string;
   const pass = formData.get('password') as string;
   const { env } = getRequestContext() as { env: CloudflareEnv };
+  
   const { activeTeam } = await getTeamContext(env);
+  
+  // Security Lock: A team member cannot update a team's credentials
+  if (!activeTeam.isOwner || !user || !pass) {
+    console.error("Unauthorized attempt to update credentials");
+    return;
+  }
   
   await env.dfsui.put(`team:${activeTeam.id}:dfs-user`, user);
   await env.dfsui.put(`team:${activeTeam.id}:dfs-pass`, pass);
+  
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/settings');
 }

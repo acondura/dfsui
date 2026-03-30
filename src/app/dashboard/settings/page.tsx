@@ -8,7 +8,6 @@ export const runtime = 'edge';
 export default async function SettingsPage() {
   const { env } = getRequestContext() as { env: CloudflareEnv };
   
-  // Fix: Nested destructuring to match the new getTeamContext structure
   const { 
     activeTeam: { id: teamId, name: teamName, isOwner }, 
     members, 
@@ -55,7 +54,6 @@ export default async function SettingsPage() {
             {members.map((m) => (
               <div key={m} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="text-xs font-bold text-slate-700">{m}</span>
-                {/* Highlight the creator/owner */}
                 {m === members[0] && <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded">OWNER</span>}
               </div>
             ))}
@@ -79,19 +77,47 @@ export default async function SettingsPage() {
       </div>
 
       {/* 3. API Credentials (Targeting Active Team) */}
-      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-10 shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-10 shadow-sm relative overflow-hidden">
+        {/* Visual feedback for non-owners */}
+        {!isOwner && (
+          <div className="absolute inset-0 bg-slate-50/40 backdrop-blur-[1px] z-20 flex items-center justify-center">
+            <div className="bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-xl">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                🔒 View Only Mode
+              </p>
+            </div>
+          </div>
+        )}
+
         <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-8">DataForSEO API Credentials</h3>
         <form action={updateSettings} className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
-            <input name="login" type="text" defaultValue={dfsUser || ''} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors" />
+            <input 
+              name="login" 
+              type="text" 
+              defaultValue={dfsUser || ''} 
+              disabled={!isOwner}
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors disabled:opacity-50" 
+            />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
-            <input name="password" type="password" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors" placeholder={dfsPass ? "••••••••" : ""} />
+            <input 
+              name="password" 
+              type="password" 
+              disabled={!isOwner}
+              className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition-colors disabled:opacity-50" 
+              placeholder={dfsPass ? "••••••••" : "Not set"} 
+            />
           </div>
-          <button type="submit" className="md:col-span-2 py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-blue-600 transition-all active:scale-[0.98]">
-            Update Team Credentials
+          
+          <button 
+            type="submit" 
+            disabled={!isOwner}
+            className="md:col-span-2 py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-blue-600 transition-all active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+          >
+            {isOwner ? 'Update Team Credentials' : 'Only Team Owners can modify credentials'}
           </button>
         </form>
       </div>
