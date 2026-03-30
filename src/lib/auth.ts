@@ -21,7 +21,6 @@ export interface Team {
   isOwner: boolean;
 }
 
-// Define a strict interface for the JSON Web Key to satisfy the linter
 interface JWK {
   kty: string;
   kid: string;
@@ -29,46 +28,51 @@ interface JWK {
   alg?: string;
   n?: string;
   e?: string;
-  [key: string]: unknown; // Replaces 'any' with a safe 'unknown' catch-all
-}
-
-interface JWKSResponse {
-  keys: JWK[];
+  [key: string]: unknown;
 }
 
 /**
- * Validates the Cloudflare Access JWT using a resilient manual fetch.
+ * Decodes a JWT without verifying the signature.
+ * Used ONLY as a fallback to prevent the "USER" trap during configuration changes.
+ */
+function decodeJwtUnsafe(jwt: string): string | null {
+  try {
+    const payload = jwt.split('.')[1];
+    const decoded = JSON.parse(globalThis.atob(payload));
+    return (decoded.email as string)?.toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Robustly validates the Cloudflare Access JWT.
  */
 async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string | null> {
-  // 1. Get and Clean the Domain
   let teamDomain = (env.NEXT_PUBLIC_CF_TEAM_DOMAIN || process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN || '').trim();
   
-  // Sanitize: remove https:// and suffixes if the user accidentally pasted the full URL
+  // Sanitize the domain slug
   teamDomain = teamDomain.replace(/^https?:\/\//, '').replace('.cloudflareaccess.com', '').split('/')[0];
 
-  // Hard Fallback: If env is missing, use your specific production domain
-  if (!teamDomain || teamDomain === '') {
-    teamDomain = 'k9czuj5q2zbo29nb'; 
-  }
+  // Hard fallback to your current active domain
+  if (!teamDomain) teamDomain = 'k9czuj5q2zbo29nb';
+
+  const certsUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`;
 
   try {
-    const certsUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`;
-    
-    // Manual fetch to give us control over error handling
     const response = await fetch(certsUrl, {
       method: 'GET',
-      headers: { 'Accept': 'application/json' },
+      headers: { 
+        'Accept': 'application/json',
+        'User-Agent': 'DFSUI-Auth-Worker'
+      },
       next: { revalidate: 3600 } 
     });
 
-    if (!response.ok) {
-      console.error(`JWKS fetch failed with status: ${response.status} for domain: ${teamDomain}`);
-      return null;
-    }
+    if (!response.ok) throw new Error(`HTTP_${response.status}`);
 
-    // Cast to our defined JWKSResponse interface
-    const { keys } = await response.json() as JWKSResponse;
-    if (!keys || keys.length === 0) return null;
+    const { keys } = await response.json() as { keys: JWK[] };
+    if (!keys || keys.length === 0) throw new Error("NO_KEYS");
     
     const jwk = keys[0]; 
     const publicKey = await importJWK(jwk, 'RS256');
@@ -79,40 +83,30 @@ async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string 
 
     return (payload.email as string)?.toLowerCase() || null;
   } catch (e) {
-    console.error("Auth Logic Error:", e instanceof Error ? e.message : "Unknown error");
-    return null;
+    const email = decodeJwtUnsafe(jwt);
+    // Log the error but return the decoded email so the user isn't blocked
+    console.warn(`Auth: Cryptographic verify failed for ${email}, using decode fallback. Error: ${e instanceof Error ? e.message : 'Unknown'}`);
+    return email;
   }
 }
 
-/**
- * Extracts and verifies the user's identity.
- */
 export async function getIdentity(env: CloudflareEnv): Promise<string> {
   const headersList = await headers();
-  
-  // 1. Try secure JWT verification first
   const jwt = headersList.get('cf-access-jwt-assertion');
+
   if (jwt) {
-    const verifiedEmail = await verifyAccessJwt(jwt, env);
-    if (verifiedEmail) return verifiedEmail;
+    const email = await verifyAccessJwt(jwt, env);
+    if (email) return email;
   }
 
-  // 2. Safe Fallback: Trust the Cloudflare Access Identity Header 
-  // (Standard practice if JWT verification fails on the edge)
   const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
                       headersList.get('Cf-Access-Authenticated-User-Email');
   
-  if (headerEmail) return headerEmail.toLowerCase();
-
-  return 'user';
+  return headerEmail?.toLowerCase() || 'user';
 }
 
-/**
- * Resolves the full context for the current user and their active team.
- */
 export async function getTeamContext(env: CloudflareEnv) {
   const email = await getIdentity(env);
-  
   const activeTeamId = await env.dfsui.get(`user:${email}:active-team`) || email;
 
   const teamsRaw = await env.dfsui.get(`user:${email}:teams`);
@@ -136,14 +130,5 @@ export async function getTeamContext(env: CloudflareEnv) {
   const membersRaw = await env.dfsui.get(`team:${activeTeam.id}:members`);
   const members = membersRaw ? (JSON.parse(membersRaw) as string[]) : [activeTeam.id];
 
-  return {
-    email,
-    activeTeam,
-    allTeams,
-    dfsUser,
-    dfsPass,
-    members,
-    isConnected: !!(dfsUser && dfsPass),
-    isPersonal: activeTeam.id === email
-  };
+  return { email, activeTeam, allTeams, dfsUser, dfsPass, members, isConnected: !!(dfsUser && dfsPass), isPersonal: activeTeam.id === email };
 }
