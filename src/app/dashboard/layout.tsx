@@ -37,16 +37,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    // Outer frame with dark background
     <div className="flex h-screen bg-slate-950 text-slate-900 font-sans antialiased overflow-hidden">
       <Sidebar allTeams={allTeams} activeTeamId={activeTeam.id} />
       
-      {/* Inner container with rounded corners and shadow */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 rounded-tl-[3rem] my-2 mr-2 shadow-2xl">
         <header className="h-20 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center justify-between px-10 shrink-0 z-10">
           <div className="flex flex-col">
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Context</span>
-            <span className="text-sm font-bold text-slate-900 lowercase">{activeTeam.name}</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm font-bold text-slate-900">
+                {activeTeam.id === email ? 'Personal Workspace' : activeTeam.name}
+              </span>
+              {activeTeam.id === email && (
+                <span className="text-[11px] font-medium text-slate-400 lowercase">
+                  ({email})
+                </span>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center gap-6">
@@ -57,7 +64,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
             
             <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 font-black text-xs">
-              {email[0].toUpperCase()}
+              {email[0]?.toUpperCase()}
             </div>
           </div>
         </header>
@@ -69,6 +76,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
           </main>
           
+          {/* Right Sidebar - Environment Details */}
           <aside className="hidden 2xl:flex w-80 border-l border-slate-200 bg-white p-8 flex-col gap-8">
             <div className="space-y-4">
               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Environment</h2>
