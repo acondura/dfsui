@@ -1,4 +1,3 @@
-// src/app/dashboard/settings/actions.ts
 'use server'
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
@@ -6,84 +5,108 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getTeamContext, CloudflareEnv, getIdentity } from '@/lib/auth';
 
+/**
+ * Creates a new workspace/team for the current user.
+ */
 export async function createTeam(formData: FormData) {
   const name = formData.get('teamName') as string;
   const { env } = getRequestContext() as { env: CloudflareEnv };
-  const email = await getIdentity();
+  
+  // env is required here to resolve identity correctly in Production
+  const email = await getIdentity(env);
 
   if (!name || email === 'user') return;
 
   const teamId = `team-${crypto.randomUUID().slice(0, 8)}`;
   
-  // Set metadata
+  // 1. Set Team Metadata
   await env.dfsui.put(`team:${teamId}:name`, name);
   await env.dfsui.put(`team:${teamId}:members`, JSON.stringify([email]));
   
-  // Add to user's team list
+  // 2. Add this team to the user's list of joined teams
   const teamsRaw = await env.dfsui.get(`user:${email}:teams`);
-  const teams = teamsRaw ? JSON.parse(teamsRaw) : [email];
+  const teams = teamsRaw ? (JSON.parse(teamsRaw) as string[]) : [email];
   if (!teams.includes(teamId)) teams.push(teamId);
   await env.dfsui.put(`user:${email}:teams`, JSON.stringify(teams));
 
-  // Set as active
+  // 3. Set this new team as the active one
   await env.dfsui.put(`user:${email}:active-team`, teamId);
   
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/settings');
 }
 
+/**
+ * Adds a new member to the current active workspace.
+ */
 export async function addMember(formData: FormData) {
-  const inviteEmail = (formData.get('email') as string).toLowerCase();
+  const inviteEmail = (formData.get('email') as string).toLowerCase().trim();
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const { activeTeam, members } = await getTeamContext(env);
 
-  // Security: Only owner can invite members
-  if (!activeTeam.isOwner || members.includes(inviteEmail)) return;
+  // Security: Only the owner can invite, and user shouldn't be added twice
+  if (!activeTeam.isOwner || members.includes(inviteEmail) || !inviteEmail) return;
 
-  // Add to Team members
+  // 1. Update Team member list
   const newMembers = [...members, inviteEmail];
   await env.dfsui.put(`team:${activeTeam.id}:members`, JSON.stringify(newMembers));
   
-  // Add team to invitee's teams list
+  // 2. Add the team to the invitee's list of teams
   const inviteeTeamsRaw = await env.dfsui.get(`user:${inviteEmail}:teams`);
-  const inviteeTeams = inviteeTeamsRaw ? JSON.parse(inviteeTeamsRaw) : [inviteEmail];
+  const inviteeTeams = inviteeTeamsRaw ? (JSON.parse(inviteeTeamsRaw) as string[]) : [inviteEmail];
   if (!inviteeTeams.includes(activeTeam.id)) inviteeTeams.push(activeTeam.id);
   await env.dfsui.put(`user:${inviteEmail}:teams`, JSON.stringify(inviteeTeams));
 
   revalidatePath('/dashboard/settings');
 }
 
+/**
+ * Switches the user's currently active team context.
+ */
 export async function switchTeam(teamId: string) {
   const { env } = getRequestContext() as { env: CloudflareEnv };
-  const email = await getIdentity();
+  const email = await getIdentity(env);
+  
   await env.dfsui.put(`user:${email}:active-team`, teamId);
+  
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/settings');
 }
 
+/**
+ * Permanently deletes the active workspace.
+ */
 export async function deleteTeam() {
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const { email, activeTeam, members } = await getTeamContext(env);
 
-  // Requirement: Only owner can delete, and only if team is empty (except owner)
-  if (!activeTeam.isOwner || members.length > 1) return;
+  // Security: Only owner can delete, and only if they are the last member
+  if (!activeTeam.isOwner || members.length > 1) {
+    console.error("Deletion blocked: Only owners can delete empty workspaces.");
+    return;
+  }
 
-  // Cleanup
+  // 1. Remove team data
   await env.dfsui.delete(`team:${activeTeam.id}:name`);
   await env.dfsui.delete(`team:${activeTeam.id}:members`);
   await env.dfsui.delete(`team:${activeTeam.id}:dfs-user`);
   await env.dfsui.delete(`team:${activeTeam.id}:dfs-pass`);
   
-  // Remove from user's list
+  // 2. Remove from user's active list
   const teamsRaw = await env.dfsui.get(`user:${email}:teams`);
   const teams = teamsRaw ? (JSON.parse(teamsRaw) as string[]).filter(id => id !== activeTeam.id) : [];
   await env.dfsui.put(`user:${email}:teams`, JSON.stringify(teams));
 
-  // Reset user to personal workspace
+  // 3. Revert user to their personal workspace
   await env.dfsui.put(`user:${email}:active-team`, email);
 
   revalidatePath('/dashboard');
   redirect('/dashboard/settings');
 }
 
+/**
+ * Updates DataForSEO credentials for the active workspace.
+ */
 export async function updateSettings(formData: FormData) {
   const user = formData.get('login') as string;
   const pass = formData.get('password') as string;
@@ -91,7 +114,7 @@ export async function updateSettings(formData: FormData) {
   
   const { activeTeam } = await getTeamContext(env);
   
-  // Security Lock: A team member cannot update a team's credentials
+  // Security Lock: Only owner can modify workspace credentials
   if (!activeTeam.isOwner || !user || !pass) {
     console.error("Unauthorized attempt to update credentials");
     return;

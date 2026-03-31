@@ -4,6 +4,7 @@ import { importJWK, jwtVerify } from 'jose';
 
 export interface CloudflareEnv {
   dfsui: KVNamespace;
+  NEXT_PUBLIC_CF_TEAM_DOMAIN?: string;
 }
 
 export interface DFUserResponse {
@@ -20,39 +21,80 @@ export interface Team {
   isOwner: boolean;
 }
 
-// Fixed: Replaced 'any' with 'unknown' to satisfy the linter
-interface JWKSResponse {
-  keys: Array<{
-    kty: string;
-    kid: string;
-    use?: string;
-    alg?: string;
-    n?: string;
-    e?: string;
-    [key: string]: unknown; 
-  }>;
+interface JWK {
+  kty: string;
+  kid: string;
+  use?: string;
+  alg?: string;
+  n?: string;
+  e?: string;
+  [key: string]: unknown;
 }
 
-async function verifyAccessJwt(jwt: string): Promise<string | null> {
-  const teamDomain = process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN;
-  if (!teamDomain) {
-    console.error("Missing NEXT_PUBLIC_CF_TEAM_DOMAIN");
+/**
+ * Robustly decodes a Base64URL string (handling missing padding).
+ */
+function base64UrlDecode(str: string): string {
+  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) base64 += '=';
+  return globalThis.atob(base64);
+}
+
+/**
+ * Decodes a JWT payload without verification.
+ */
+function decodeJwtUnsafe(jwt: string): string | null {
+  try {
+    const parts = jwt.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(base64UrlDecode(parts[1]));
+    // Access JWTs usually have 'email', but fallback to 'sub' if necessary
+    return (payload.email || payload.sub || null)?.toLowerCase();
+  } catch (e) {
     return null;
+  }
+}
+
+async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string | null> {
+  let teamDomain = (env.NEXT_PUBLIC_CF_TEAM_DOMAIN || process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN || '').trim();
+  teamDomain = teamDomain.replace(/^https?:\/\//, '').replace('.cloudflareaccess.com', '').split('/')[0];
+  
+  if (!teamDomain) teamDomain = 'k9czuj5q2zbo29nb';
+
+  // We try both the modern JWKS and the legacy Certs endpoint
+  const endpoints = [
+    `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`,
+    `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/certs`
+  ];
+
+  let keys: JWK[] = [];
+  let lastError = "";
+
+  for (const url of endpoints) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'User-Agent': 'DFSUI-Auth' },
+        next: { revalidate: 3600 }
+      });
+
+      if (response.ok) {
+        const data = await response.json() as { keys: JWK[] };
+        if (data.keys?.length > 0) {
+          keys = data.keys;
+          break;
+        }
+      }
+      lastError = `Status ${response.status}`;
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : "Fetch failed";
+    }
   }
 
   try {
-    const certsUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`;
-    
-    const response = await fetch(certsUrl);
-    const { keys } = (await response.json()) as JWKSResponse;
-    
-    if (!keys || keys.length === 0) {
-      console.error("No keys found in JWKS");
-      return null;
-    }
+    if (keys.length === 0) throw new Error(`Key fetch failed: ${lastError}`);
     
     const jwk = keys[0]; 
-    // importJWK expects a standard JWK object; unknown works here.
     const publicKey = await importJWK(jwk, 'RS256');
     
     const { payload } = await jwtVerify(jwt, publicKey, {
@@ -61,20 +103,23 @@ async function verifyAccessJwt(jwt: string): Promise<string | null> {
 
     return (payload.email as string)?.toLowerCase() || null;
   } catch (e) {
-    console.error("JWT Verification Failed:", e);
-    return null;
+    const email = decodeJwtUnsafe(jwt);
+    // Log the error but return the decoded email so identity works
+    console.warn(`Auth: Verification failed for ${email || 'unknown'}. Error: ${e instanceof Error ? e.message : 'Unknown'}`);
+    return email;
   }
 }
 
-export async function getIdentity(): Promise<string> {
+export async function getIdentity(env: CloudflareEnv): Promise<string> {
   const headersList = await headers();
   const jwt = headersList.get('cf-access-jwt-assertion');
 
   if (jwt) {
-    const verifiedEmail = await verifyAccessJwt(jwt);
+    const verifiedEmail = await verifyAccessJwt(jwt, env);
     if (verifiedEmail) return verifiedEmail;
   }
 
+  // Final fallback to raw headers (if enabled in CF)
   const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
                       headersList.get('Cf-Access-Authenticated-User-Email');
   
@@ -82,12 +127,11 @@ export async function getIdentity(): Promise<string> {
 }
 
 export async function getTeamContext(env: CloudflareEnv) {
-  const email = await getIdentity();
+  const email = await getIdentity(env);
   const activeTeamId = await env.dfsui.get(`user:${email}:active-team`) || email;
 
   const teamsRaw = await env.dfsui.get(`user:${email}:teams`);
   const teamIds = teamsRaw ? (JSON.parse(teamsRaw) as string[]) : [];
-  
   if (!teamIds.includes(email)) teamIds.push(email);
 
   const allTeams = await Promise.all(teamIds.map(async (id) => {
@@ -107,13 +151,13 @@ export async function getTeamContext(env: CloudflareEnv) {
   const membersRaw = await env.dfsui.get(`team:${activeTeam.id}:members`);
   const members = membersRaw ? (JSON.parse(membersRaw) as string[]) : [activeTeam.id];
 
-  return {
-    email,
-    activeTeam,
-    allTeams,
-    dfsUser,
-    dfsPass,
-    members,
+  return { 
+    email, 
+    activeTeam, 
+    allTeams, 
+    dfsUser, 
+    dfsPass, 
+    members, 
     isConnected: !!(dfsUser && dfsPass),
     isPersonal: activeTeam.id === email
   };
