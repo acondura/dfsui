@@ -23,9 +23,12 @@ export default function SearchForm({
   const [locations, setLocations] = useState<Location[]>([]);
   const [loadingLocs, setLoadingLocs] = useState(false);
 
+  // Inside useEffect in SearchForm.tsx
   useEffect(() => {
     let isMounted = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingLocs(true);
+    
     getLocations(mode).then(res => {
       if (isMounted) {
         setLocations(res);
