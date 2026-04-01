@@ -9,7 +9,7 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
   const { dfsUser, dfsPass } = await getTeamContext(env);
   
   if (!dfsUser || !dfsPass) {
-    return { results: [], cost: 0, error: "API Credentials missing. Check Settings." };
+    return { results: [], cost: 0, error: "API Credentials missing in Settings." };
   }
 
   const auth = btoa(`${dfsUser}:${dfsPass}`);
@@ -17,46 +17,35 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
     ? 'https://api.dataforseo.com/v3/dataforseo_labs/google/related_keywords/live'
     : 'https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live';
 
-  // 10X Payload Logic
+  // 10X Payload: Removed language_code to avoid the "Invalid Field" error. 
+  // The API defaults to English (1000) automatically.
+  const locCode = parseInt(location) || 2840; // Fallback to US if empty
+  
   const payload = mode === 'labs' 
-    ? [{ keyword, location_code: parseInt(location), language_code: 1000, limit: 20 }]
-    : [{ keywords: [keyword], location_code: parseInt(location), language_code: 1000, include_seed_keyword: true }];
+    ? [{ keyword, location_code: locCode, limit: 20 }]
+    : [{ keywords: [keyword], location_code: locCode, include_seed_keyword: true }];
 
   try {
-    console.log(`DFS Request [${mode}]:`, JSON.stringify(payload));
-
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 
-        'Authorization': `Basic ${auth}`, 
-        'Content-Type': 'application/json' 
-      },
+      headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error(`DFS HTTP Error ${res.status}:`, text);
-      return { results: [], cost: 0, error: `API Server Error (${res.status})` };
-    }
 
     const data = await res.json() as any;
     const task = data.tasks?.[0];
 
-    // Check for DataForSEO internal status codes (e.g. 40201 = No Balance)
     if (task && task.status_code >= 40000) {
-      console.error("DFS Business Error:", task.status_code, task.status_message);
+      console.error(`DFS Business Error: ${task.status_code} - ${task.status_message}`);
       return { results: [], cost: 0, error: task.status_message };
     }
 
     const results = task?.result?.[0]?.items || [];
-    console.log(`DFS Success: Found ${results.length} items. Cost: ${task?.cost}`);
-
+    
     revalidatePath('/dashboard/keywords'); 
     return { results, cost: task?.cost || 0 };
-
   } catch (error: any) {
-    console.error("Fetch keywords exception:", error.message);
+    console.error("Fetch Exception:", error.message);
     return { results: [], cost: 0, error: "Connection to API failed." };
   }
 }
@@ -85,7 +74,7 @@ export async function analyzeCompetition(keyword: string, locationCode: string) 
     const res = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
       method: 'POST',
       headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ keyword, location_code: parseInt(locationCode), language_code: 1000, limit: 10 }])
+      body: JSON.stringify([{ keyword, location_code: parseInt(locationCode) || 2840, limit: 10 }])
     });
 
     const data = await res.json() as any;
