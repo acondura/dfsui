@@ -16,53 +16,70 @@ interface Competitor {
 }
 
 const MetricBadge = ({ label, isMet }: { label: string, isMet: boolean }) => (
-  <div className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all ${
+  <div className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all duration-300 ${
     isMet 
-    ? 'bg-emerald-50 border-emerald-100 text-emerald-700 shadow-sm' 
-    : 'bg-white border-slate-100 text-slate-300'
+    ? 'bg-primary/10 border-primary/20 text-primary shadow-sm' 
+    : 'bg-muted/30 border-border text-foreground/20'
   }`}>
     {isMet ? <Check size={14} strokeWidth={4} /> : <X size={14} strokeWidth={4} />}
-    <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
+    <span className="text-[8px] font-black uppercase tracking-[0.2em]">{label}</span>
   </div>
 );
 
 export default function CompetitionDeepDive({ data, keyword }: { data: Competitor[], keyword: string }) {
-  if (!data) return <div className="text-slate-400 text-xs font-bold uppercase tracking-widest">No audit data available.</div>;
+  if (!data) return <div className="text-muted-foreground/40 text-xs font-bold uppercase tracking-widest p-8 text-center border border-dashed border-border rounded-3xl">No audit data available.</div>;
 
   const avgScore = data.reduce((acc, curr) => acc + curr.score, 0) / data.length;
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Header Audit Card */}
+      <div className="flex justify-between items-center bg-background p-6 rounded-3xl border border-border shadow-sm">
         <div>
-          <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">On-Page Competition Audit</h3>
-          <p className="text-[10px] font-bold text-slate-400 mt-1">Analyzing Top 10 for <span className="text-blue-600"><b>{keyword}</b></span></p>
+          <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Competitor Content Analysis</h3>
+          <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-widest">
+            Top 10 Rankings for <span className="text-primary font-black">{keyword}</span>
+          </p>
         </div>
         <div className="flex items-center gap-4 text-right">
           <div>
-            <p className="text-[9px] font-black text-slate-400 uppercase">Avg. Optimization</p>
-            <p className="text-xl font-black text-slate-900">{avgScore.toFixed(0)}%</p>
+            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Avg. Score</p>
+            <p className="text-xl font-black text-foreground tracking-tighter">{avgScore.toFixed(0)}%</p>
           </div>
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${avgScore > 60 ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
-            <ShieldCheck size={24} />
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${avgScore > 60 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground/40'}`}>
+            <ShieldCheck size={24} strokeWidth={2.5} />
           </div>
         </div>
       </div>
 
+      {/* Competitors Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {data.map((item, i) => (
-          <div key={item.url} className="bg-white border border-slate-100 rounded-[2rem] p-6 hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+          <div key={item.url} className="bg-background border border-border rounded-3xl p-6 hover:border-primary/30 transition-all group shadow-sm hover:shadow-md">
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
-                <span className="w-7 h-7 flex items-center justify-center bg-slate-900 text-white rounded-xl text-[10px] font-black">#{i + 1}</span>
+                <span className="w-7 h-7 flex items-center justify-center bg-muted text-foreground/60 rounded-xl text-[10px] font-black group-hover:bg-primary group-hover:text-white transition-colors">
+                  {i + 1}
+                </span>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-black text-slate-900 truncate flex items-center gap-1.5">
-                    <Globe size={10} className="text-slate-400" />
+                  <p className="text-[11px] font-bold text-foreground truncate flex items-center gap-1.5">
+                    <Globe size={10} className="text-muted-foreground/40" />
                     {item.domain}
+                  </p>
+                  <p className="text-[9px] font-medium text-muted-foreground/50 truncate max-w-[140px] uppercase tracking-tighter">
+                    {item.url.replace('https://', '').replace('www.', '')}
                   </p>
                 </div>
               </div>
-              <span className="text-sm font-black text-slate-900">{item.score}%</span>
+              <div className="text-right">
+                <span className="text-sm font-black text-foreground tracking-tighter">{item.score}%</span>
+                <div className="w-12 h-1 bg-muted rounded-full mt-1 overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-1000" 
+                    style={{ width: `${item.score}%` }} 
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-5 gap-2">
