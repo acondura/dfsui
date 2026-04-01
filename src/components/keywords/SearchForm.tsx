@@ -36,7 +36,7 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: Searc
   }, [mode]);
 
   return (
-    <div className="bg-background border border-border rounded-xl p-5 shadow-sm">
+    <div className="bg-background shadow-sm">
       <div className="flex flex-col lg:flex-row gap-2">
         <div className="flex-1 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={16} />

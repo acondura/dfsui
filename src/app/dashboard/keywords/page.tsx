@@ -48,7 +48,7 @@ export default function KeywordsPage() {
         )}
       </div>
 
-      <div className="bg-background border border-border rounded-3xl p-8 shadow-sm">
+      <div className="bg-background shadow-sm">
         <SearchForm onSearch={handleSearch} initialLocation={activeLoc} />
       </div>
 
