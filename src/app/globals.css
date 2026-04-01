@@ -27,3 +27,26 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Eliminăm culorile de fundal ale rândurilor selectate pentru claritate pe hârție */
+  tr {
+    background: transparent !important;
+    page-break-inside: avoid;
+  }
+
+  /* Forțăm coloanele de date să fie vizibile */
+  .text-primary {
+    color: rgb(107, 212, 161) !important;
+    -webkit-print-color-adjust: exact;
+  }
+}
