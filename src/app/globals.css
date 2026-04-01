@@ -3,47 +3,27 @@
 :root {
   --background: #ffffff;
   --foreground: #1a1c1e;
-  --accent: 107, 212, 161; /* Mint Green */
-  --accent-foreground: #ffffff;
+  --primary: 107, 212, 161;
   --muted: #f4f5f7;
-  --border: #e2e5e9;
+  --muted-foreground: #64748b;
+  --border: #eef0f2;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1a1c1e;
+    --background: #111214;
     --foreground: #f4f5f7;
-    --muted: #2d2f31;
-    --border: #383a3c;
+    --muted: #1e2023;
+    --muted-foreground: #94a3b8;
+    --border: #2a2c2f;
   }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: rgb(var(--accent));
-  --color-border: var(--border);
+  --color-primary: rgb(var(--primary));
   --color-muted: var(--muted);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-}
-
-/* Gin-style scrollbars */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 10px;
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
 }
