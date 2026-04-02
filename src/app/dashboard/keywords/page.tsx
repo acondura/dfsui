@@ -17,7 +17,6 @@ export default function KeywordsPage() {
     setLoading(true);
     setError(null);
     setActiveLoc(loc);
-    
     try {
       const data = await fetchKeywords(q, loc, mode);
       if (data.error) {
@@ -35,40 +34,38 @@ export default function KeywordsPage() {
   };
 
   return (
-    <div className="space-y-10 pb-20 animate-in fade-in duration-700">
+    <div className="space-y-12 pb-20 animate-in fade-in duration-700">
       <div className="flex justify-between items-end">
-        <h1 className="text-4xl font-black text-foreground tracking-tighter">Keyword Research</h1>
+        <h1 className="text-5xl font-black text-slate-950 tracking-tighter">Keyword Research</h1>
         {cost > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 transition-all">
-             <Coins size={14} />
-             <span className="text-[10px] font-black uppercase tracking-widest">${cost.toFixed(4)}</span>
+          <div className="flex items-center gap-2 px-5 py-2.5 bg-slate-950 text-white rounded-xl shadow-2xl">
+             <Coins size={16} />
+             <span className="text-xs font-black uppercase tracking-widest">${cost.toFixed(4)}</span>
           </div>
         )}
       </div>
 
-      <div className="bg-background">
-        <SearchForm onSearch={handleSearch} initialLocation={activeLoc} />
-      </div>
+      <SearchForm onSearch={handleSearch} initialLocation={activeLoc} />
 
       {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex items-center gap-3 text-red-600 dark:text-red-400 animate-in slide-in-from-top-2">
-          <AlertCircle size={18} />
-          <p className="text-xs font-bold uppercase tracking-widest">API Status: {error}</p>
+        <div className="p-5 bg-red-50 border-l-4 border-red-600 flex items-center gap-4 text-red-700 animate-in slide-in-from-left-4">
+          <AlertCircle size={20} />
+          <p className="text-sm font-black uppercase tracking-widest">Error: {error}</p>
         </div>
       )}
 
-      <div className="bg-background border border-border rounded-xl overflow-hidden shadow-sm min-h-[300px]">
+      <div className="min-h-[400px] pt-4">
         {loading ? (
-          <div className="p-20 flex flex-col items-center justify-center space-y-4">
-            <div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin" />
-            <p className="text-[10px] font-black uppercase text-muted-foreground/40 tracking-widest">Querying DataForSEO...</p>
+          <div className="py-32 flex flex-col items-center justify-center space-y-6">
+            <div className="w-12 h-12 border-4 border-slate-100 border-t-slate-950 rounded-full animate-spin" />
+            <p className="text-xs font-black uppercase text-slate-400 tracking-[0.3em]">Querying DataForSEO...</p>
           </div>
         ) : results.length > 0 ? (
           <KeywordTable results={results} locationCode={activeLoc} />
         ) : (
-          <div className="p-20 flex flex-col items-center justify-center text-center">
-            <Search size={32} className="text-muted-foreground/20 mb-4" />
-            <p className="text-xs font-black text-muted-foreground/40 uppercase tracking-widest">No results yet</p>
+          <div className="py-32 flex flex-col items-center justify-center text-center opacity-20">
+            <Search size={48} className="text-slate-950 mb-6" />
+            <p className="text-sm font-black text-slate-950 uppercase tracking-[0.4em]">No results yet</p>
           </div>
         )}
       </div>

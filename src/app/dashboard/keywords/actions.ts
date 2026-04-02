@@ -4,26 +4,28 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 import { getTeamContext, CloudflareEnv } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
+export interface KeywordItem {
+  keyword: string;
+  keyword_info?: {
+    search_volume?: number;
+    cpc?: number;
+  };
+}
+
 export async function fetchKeywords(keyword: string, location: string, mode: 'labs' | 'live') {
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const { dfsUser, dfsPass } = await getTeamContext(env);
-  
-  if (!dfsUser || !dfsPass) {
-    return { results: [], cost: 0, error: "API Credentials missing in Settings." };
-  }
+  if (!dfsUser || !dfsPass) return { results: [], cost: 0, error: "Credentials missing." };
 
   const auth = btoa(`${dfsUser}:${dfsPass}`);
   const endpoint = mode === 'labs'
     ? 'https://api.dataforseo.com/v3/dataforseo_labs/google/related_keywords/live'
     : 'https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live';
 
-  // 10X Payload: Removed language_code to avoid the "Invalid Field" error. 
-  // The API defaults to English (1000) automatically.
-  const locCode = parseInt(location) || 2840; // Fallback to US if empty
-  
+  const locCode = parseInt(location) || 2840;
   const payload = mode === 'labs' 
-    ? [{ keyword, location_code: locCode, limit: 20 }]
-    : [{ keywords: [keyword], location_code: locCode, include_seed_keyword: true }];
+    ? [{ keyword, location_code: locCode, language_name: "English", limit: 20 }]
+    : [{ keywords: [keyword], location_code: locCode, language_code: 1000, include_seed_keyword: true }];
 
   try {
     const res = await fetch(endpoint, {
@@ -31,23 +33,21 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
       headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     const data = await res.json() as any;
     const task = data.tasks?.[0];
+    if (task && task.status_code >= 40000) return { results: [], cost: 0, error: task.status_message };
 
-    if (task && task.status_code >= 40000) {
-      console.error(`DFS Business Error: ${task.status_code} - ${task.status_message}`);
-      return { results: [], cost: 0, error: task.status_message };
-    }
+    const rawItems = task?.result?.[0]?.items || [];
+    const results = mode === 'labs' 
+      ? rawItems.map((i: any) => ({
+          keyword: i.keyword_data.keyword,
+          keyword_info: i.keyword_data.keyword_info
+        }))
+      : rawItems;
 
-    const results = task?.result?.[0]?.items || [];
-    
     revalidatePath('/dashboard/keywords'); 
     return { results, cost: task?.cost || 0 };
-  } catch (error: any) {
-    console.error("Fetch Exception:", error.message);
-    return { results: [], cost: 0, error: "Connection to API failed." };
-  }
+  } catch (_e) { return { results: [], cost: 0, error: "API Connection Failed" }; }
 }
 
 export async function getLocations(mode: 'labs' | 'live') {
@@ -57,7 +57,6 @@ export async function getLocations(mode: 'labs' | 'live') {
   const url = mode === 'labs' 
     ? 'https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages'
     : 'https://api.dataforseo.com/v3/keywords_data/google_ads/locations';
-
   try {
     const res = await fetch(url, { headers: { 'Authorization': `Basic ${auth}` } });
     const data = await res.json() as any;
@@ -69,28 +68,24 @@ export async function analyzeCompetition(keyword: string, locationCode: string) 
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const { dfsUser, dfsPass } = await getTeamContext(env);
   const auth = btoa(`${dfsUser}:${dfsPass}`);
-
   try {
     const res = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
       method: 'POST',
       headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
       body: JSON.stringify([{ keyword, location_code: parseInt(locationCode) || 2840, limit: 10 }])
     });
-
     const data = await res.json() as any;
     const items = data.tasks?.[0]?.result?.[0]?.items || [];
-
     const analysis = items.slice(0, 10).map((item: any) => {
       const kw = keyword.toLowerCase();
       const metrics = {
-        url: item.url.toLowerCase().includes(kw.replace(/\s+/g, '-')),
-        title: (item.title || "").toLowerCase().includes(kw),
-        description: (item.description || "").toLowerCase().includes(kw),
+        url: item.url?.toLowerCase().includes(kw.replace(/\s+/g, '-')) || false,
+        title: item.title?.toLowerCase().includes(kw) || false,
+        description: item.description?.toLowerCase().includes(kw) || false,
         h1: false, p1: false
       };
-      return { domain: new URL(item.url).hostname, url: item.url, score: Object.values(metrics).filter(Boolean).length * 25, metrics };
+      return { domain: item.url ? new URL(item.url).hostname : 'unknown', url: item.url || '', score: Object.values(metrics).filter(Boolean).length * 25, metrics };
     });
-
     return { analysis, cost: data.tasks?.[0]?.cost || 0 };
   } catch (_e) { return { analysis: [], cost: 0 }; }
 }

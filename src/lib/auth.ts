@@ -111,6 +111,12 @@ async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string 
 }
 
 export async function getIdentity(env: CloudflareEnv): Promise<string> {
+  // 10X Dev Mock: If running locally, return your email immediately
+  // This bypasses the need for Cloudflare Access JWTs on localhost
+  if (process.env.NODE_ENV === 'development') {
+    return 'andrei@condurachi.ro'; // Put your actual email here
+  }
+
   const headersList = await headers();
   const jwt = headersList.get('cf-access-jwt-assertion');
 

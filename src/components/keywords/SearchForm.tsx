@@ -27,14 +27,14 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
     .slice(0, 5);
 
   return (
-    <div className="space-y-4 p-5 bg-background border border-border rounded-xl shadow-sm">
-      <div className="flex flex-col lg:flex-row gap-2">
+    <div className="space-y-6">
+      <div className="flex flex-col lg:flex-row gap-3">
         <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/30" size={18} />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-900" size={24} />
           <input 
             value={query} 
             onChange={e => setQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-muted/20 border border-border rounded-lg font-bold outline-none focus:border-primary focus:bg-background transition-all text-foreground placeholder:text-muted-foreground/30"
+            className="w-full pl-14 pr-6 py-5 bg-slate-100 border-2 border-transparent focus:border-slate-900 rounded-xl font-black text-xl outline-none transition-all text-slate-950 placeholder:text-slate-400"
             placeholder="Seed keyword..."
           />
         </div>
@@ -42,65 +42,41 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
         <button 
           onClick={() => onSearch(query, location, mode)}
           disabled={!query.trim()}
-          className="px-10 py-4 bg-primary text-white rounded-lg font-black uppercase text-[11px] tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
+          className="px-12 py-5 bg-slate-950 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all disabled:opacity-30"
         >
           Research
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 px-1">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t-2 border-slate-100">
+        <div className="flex items-center gap-3">
           {quickLocations.map((loc) => (
             <button
               key={loc.code}
               onClick={() => setLocation(loc.code)}
-              className={`px-3 py-1.5 rounded-md text-[10px] font-bold border transition-all ${
-                location === loc.code ? 'bg-primary/10 border-primary/40 text-primary' : 'bg-transparent border-border text-muted-foreground/50'
+              className={`px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-tight border-2 transition-all ${
+                location === loc.code ? 'bg-slate-950 text-white border-slate-950' : 'bg-white border-slate-200 text-slate-900 hover:border-slate-950'
               }`}
             >
               {loc.name}
             </button>
           ))}
           
-          <div className="relative">
-            <button 
-              onClick={() => setIsLocOpen(!isLocOpen)}
-              className="px-3 py-1.5 rounded-md text-[10px] font-bold border border-border text-muted-foreground/50 flex items-center gap-2"
-            >
-              <Globe size={12} /> Other
-            </button>
-            {isLocOpen && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-background border border-border rounded-lg shadow-2xl z-50 p-2">
-                <input 
-                  placeholder="Search country..." 
-                  value={searchLoc} 
-                  onChange={e => setSearchLoc(e.target.value)}
-                  className="w-full px-3 py-2 bg-muted/50 border border-border rounded-md text-xs outline-none mb-2"
-                />
-                <div className="max-h-40 overflow-y-auto">
-                  {filteredLocs.map(l => (
-                    <button
-                      key={l.location_code}
-                      onClick={() => { setLocation(l.location_code.toString()); setIsLocOpen(false); }}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-primary/5 rounded-md flex justify-between items-center"
-                    >
-                      {l.location_name}
-                      {location === l.location_code.toString() && <Check size={12} className="text-primary" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <button 
+            onClick={() => setIsLocOpen(!isLocOpen)}
+            className="px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-tight border-2 border-slate-200 text-slate-900 bg-white hover:border-slate-950 flex items-center gap-2"
+          >
+            <Globe size={14} /> Custom
+          </button>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="flex gap-4 border-l border-border pl-6">
-            <button onClick={() => setMode('labs')} className={`text-[9px] font-black uppercase tracking-widest ${mode === 'labs' ? 'text-primary underline underline-offset-4' : 'text-muted-foreground/30'}`}>Labs</button>
-            <button onClick={() => setMode('live')} className={`text-[9px] font-black uppercase tracking-widest ${mode === 'live' ? 'text-primary underline underline-offset-4' : 'text-muted-foreground/30'}`}>Live</button>
+        <div className="flex items-center gap-8">
+          <div className="flex p-1 bg-slate-100 rounded-xl border-2 border-slate-200">
+            <button onClick={() => setMode('labs')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'labs' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-950'}`}>Labs</button>
+            <button onClick={() => setMode('live')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'live' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-950'}`}>Live</button>
           </div>
-          <div className="text-[9px] font-black uppercase text-muted-foreground/20 flex items-center gap-2 tracking-widest border-l border-border pl-6">
-            <Coins size={11} className="text-primary/30" /> ${mode === 'labs' ? '0.01' : '0.05'}
+          <div className="text-[10px] font-black uppercase text-slate-950 flex items-center gap-2 tracking-[0.1em] border-l-2 border-slate-200 pl-6">
+            <Coins size={14} className="text-slate-400" /> ${mode === 'labs' ? '0.01' : '0.05'}
           </div>
         </div>
       </div>
