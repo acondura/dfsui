@@ -40,8 +40,8 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
     const rawItems = task?.result?.[0]?.items || [];
     const results = mode === 'labs' 
       ? rawItems.map((i: any) => ({
-          keyword: i.keyword_data.keyword,
-          keyword_info: i.keyword_data.keyword_info
+          keyword: i.keyword_data?.keyword || 'Unknown',
+          keyword_info: i.keyword_data?.keyword_info
         }))
       : rawItems;
 
@@ -68,24 +68,41 @@ export async function analyzeCompetition(keyword: string, locationCode: string) 
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const { dfsUser, dfsPass } = await getTeamContext(env);
   const auth = btoa(`${dfsUser}:${dfsPass}`);
+
   try {
     const res = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
       method: 'POST',
       headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ keyword, location_code: parseInt(locationCode) || 2840, limit: 10 }])
+      body: JSON.stringify([{ 
+        keyword, 
+        location_code: parseInt(locationCode) || 2840,
+        language_name: "English",
+        limit: 10 
+      }])
     });
+
     const data = await res.json() as any;
     const items = data.tasks?.[0]?.result?.[0]?.items || [];
-    const analysis = items.slice(0, 10).map((item: any) => {
-      const kw = keyword.toLowerCase();
-      const metrics = {
-        url: item.url?.toLowerCase().includes(kw.replace(/\s+/g, '-')) || false,
-        title: item.title?.toLowerCase().includes(kw) || false,
-        description: item.description?.toLowerCase().includes(kw) || false,
-        h1: false, p1: false
-      };
-      return { domain: item.url ? new URL(item.url).hostname : 'unknown', url: item.url || '', score: Object.values(metrics).filter(Boolean).length * 25, metrics };
-    });
+
+    const analysis = items
+      .filter((item: any) => item.type === "organic" && item.url)
+      .map((item: any) => {
+        const kw = keyword.toLowerCase();
+        const metrics = {
+          url: (item.url || "").toLowerCase().includes(kw.replace(/\s+/g, '-')),
+          title: (item.title || "").toLowerCase().includes(kw),
+          description: (item.description || "").toLowerCase().includes(kw),
+          h1: false // SERP API provides title/desc; H1 is an on-page metric
+        };
+
+        let hostname = 'unknown';
+        try { hostname = new URL(item.url).hostname; } catch (e) {}
+
+        // 10X Math: 4 metrics = 25% each
+        const score = Object.values(metrics).filter(Boolean).length * 25;
+        return { domain: hostname, url: item.url, score, metrics };
+      });
+
     return { analysis, cost: data.tasks?.[0]?.cost || 0 };
   } catch (_e) { return { analysis: [], cost: 0 }; }
 }
