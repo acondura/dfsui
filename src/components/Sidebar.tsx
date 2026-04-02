@@ -25,8 +25,7 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
     <aside className="w-64 bg-muted/30 flex flex-col shrink-0 border-r border-border z-50">
       <div className="p-6">
         <h1 className="text-foreground text-lg font-black tracking-tighter flex items-center gap-2">
-          <div className="w-6 h-6 bg-primary rounded flex items-center justify-center text-[10px] text-white font-black">DF</div>
-          dfsui<span className="text-primary">.com</span>
+          DFSUI
         </h1>
       </div>
 

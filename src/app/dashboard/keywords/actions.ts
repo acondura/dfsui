@@ -1,7 +1,7 @@
 'use server'
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { getTeamContext, CloudflareEnv } from '@/lib/auth';
+import { getTeamContext, CloudflareEnv, getIdentity } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
 export interface KeywordItem {
@@ -64,8 +64,24 @@ export async function getLocations(mode: 'labs' | 'live') {
   } catch (_e) { return []; }
 }
 
-export async function analyzeCompetition(keyword: string, locationCode: string) {
+/**
+ * 10X Audit with KV Caching
+ */
+export async function analyzeCompetition(keyword: string, locationCode: string, bypassCache = false) {
   const { env } = getRequestContext() as { env: CloudflareEnv };
+  const email = await getIdentity(env);
+  const kvKey = `audit:${email}:${locationCode}:${keyword.replace(/\s+/g, '_')}`;
+
+  // 1. Try KV First (unless bypass requested)
+  if (!bypassCache) {
+    const cached = await env.dfsui.get(kvKey);
+    if (cached) {
+      console.log(`[KV Cache Hit] ${keyword}`);
+      return { analysis: JSON.parse(cached), cost: 0, cached: true };
+    }
+  }
+
+  // 2. Fallback to API
   const { dfsUser, dfsPass } = await getTeamContext(env);
   const auth = btoa(`${dfsUser}:${dfsPass}`);
 
@@ -92,17 +108,19 @@ export async function analyzeCompetition(keyword: string, locationCode: string) 
           url: (item.url || "").toLowerCase().includes(kw.replace(/\s+/g, '-')),
           title: (item.title || "").toLowerCase().includes(kw),
           description: (item.description || "").toLowerCase().includes(kw),
-          h1: false // SERP API provides title/desc; H1 is an on-page metric
+          h1: false 
         };
-
         let hostname = 'unknown';
         try { hostname = new URL(item.url).hostname; } catch (e) {}
-
-        // 10X Math: 4 metrics = 25% each
-        const score = Object.values(metrics).filter(Boolean).length * 25;
-        return { domain: hostname, url: item.url, score, metrics };
+        return { domain: hostname, url: item.url, score: Object.values(metrics).filter(Boolean).length * 25, metrics };
       });
 
-    return { analysis, cost: data.tasks?.[0]?.cost || 0 };
-  } catch (_e) { return { analysis: [], cost: 0 }; }
+    // 3. Save to KV for next time (expires in 7 days)
+    if (analysis.length > 0) {
+      await env.dfsui.put(kvKey, JSON.stringify(analysis), { expirationTtl: 604800 });
+      console.log(`[KV Cache Miss] Saved ${keyword}`);
+    }
+
+    return { analysis, cost: data.tasks?.[0]?.cost || 0, cached: false };
+  } catch (_e) { return { analysis: [], cost: 0, cached: false }; }
 }
