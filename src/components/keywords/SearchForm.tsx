@@ -34,7 +34,7 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
           <input 
             value={query} 
             onChange={e => setQuery(e.target.value)}
-            className="w-full pl-14 pr-6 py-5 bg-slate-100 border-2 border-transparent focus:border-slate-900 rounded-xl font-black text-xl outline-none transition-all text-slate-950 placeholder:text-slate-400"
+            className="w-full pl-14 pr-3 py-3 bg-slate-100 border-2 border-transparent focus:border-slate-900 rounded-xl font-black text-xl outline-none transition-all text-slate-700 placeholder:text-slate-400"
             placeholder="Seed keyword..."
           />
         </div>
@@ -42,7 +42,7 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
         <button 
           onClick={() => onSearch(query, location, mode)}
           disabled={!query.trim()}
-          className="px-12 py-5 bg-slate-950 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all disabled:opacity-30"
+          className="px-12 py-5 bg-green-700 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all disabled:opacity-30"
         >
           Research
         </button>

@@ -36,7 +36,7 @@ export default function KeywordsPage() {
   return (
     <div className="space-y-12 pb-20 animate-in fade-in duration-700">
       <div className="flex justify-between items-end">
-        <h1 className="text-5xl font-black text-slate-950 tracking-tighter">Keyword Research</h1>
+        <h1 className="text-4xl font-black text-slate-900 dark:text-slate-300 tracking-tighter">Keyword Research</h1>
         {cost > 0 && (
           <div className="flex items-center gap-2 px-5 py-2.5 bg-slate-950 text-white rounded-xl shadow-2xl">
              <Coins size={16} />
