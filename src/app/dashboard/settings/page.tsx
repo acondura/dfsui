@@ -48,11 +48,11 @@ export default async function SettingsPage() {
 
       {/* 2. Team Management Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-background border border-border rounded-3xl p-8 shadow-sm">
+        <div className="border border-border rounded-3xl p-8 shadow-sm">
           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-6">Team Members</h3>
           <div className="space-y-3">
             {members.map((m) => (
-              <div key={m} className="flex justify-between items-center p-4 bg-muted/30 rounded-2xl border border-border/50 group hover:border-primary/30 transition-all">
+              <div key={m} className="flex justify-between items-center p-4 rounded-2xl border border-border/50 group hover:border-primary/30 transition-all">
                 <span className="text-sm font-bold text-foreground/80">{m}</span>
                 {m === members[0] ? (
                   <span className="text-[8px] font-black text-primary bg-primary/10 px-2 py-1 rounded-md tracking-widest uppercase border border-primary/20">OWNER</span>
@@ -68,7 +68,7 @@ export default async function SettingsPage() {
                 name="email" 
                 type="email" 
                 placeholder="colleague@email.com" 
-                className="flex-1 px-5 py-3 bg-muted/50 rounded-2xl text-sm font-medium outline-none border border-transparent focus:border-primary/30 focus:bg-background transition-all" 
+                className="flex-1 px-5 py-3 rounded-2xl text-sm font-medium outline-none border border-transparent focus:border-primary/30 transition-all" 
                 required 
               />
               <button type="submit" className="px-6 py-3 bg-primary text-white text-[10px] font-black rounded-2xl hover:opacity-90 transition-all shadow-md shadow-primary/20 tracking-widest">ADD</button>
@@ -96,10 +96,10 @@ export default async function SettingsPage() {
       </div>
 
       {/* 3. API Credentials */}
-      <div className="bg-background border border-border rounded-3xl p-10 shadow-sm relative overflow-hidden">
+      <div className="border border-border rounded-3xl p-10 shadow-sm relative overflow-hidden">
         {!isOwner && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm z-20 flex items-center justify-center">
-            <div className="bg-background px-6 py-3 rounded-2xl border border-border shadow-2xl flex items-center gap-3">
+          <div className="absolute inset-0 backdrop-blur-sm z-20 flex items-center justify-center">
+            <div className="px-6 py-3 rounded-2xl border border-border shadow-2xl flex items-center gap-3">
               <span className="text-xl">🔒</span>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
                 ReadOnly Workspace Access
@@ -117,7 +117,7 @@ export default async function SettingsPage() {
               type="text" 
               defaultValue={isOwner ? (dfsUser || '') : ''} 
               disabled={!isOwner}
-              className="w-full px-6 py-4 bg-muted/30 border border-border rounded-2xl outline-none font-bold text-foreground focus:border-primary/50 focus:bg-background transition-all disabled:opacity-0" 
+              className="w-full px-6 py-4 border border-border rounded-2xl outline-none font-bold text-foreground focus:border-primary/50 transition-all disabled:opacity-0" 
             />
           </div>
           <div className="space-y-3">
@@ -127,7 +127,7 @@ export default async function SettingsPage() {
               type="password" 
               disabled={!isOwner}
               placeholder={isOwner && dfsPass ? "••••••••••••" : ""} 
-              className="w-full px-6 py-4 bg-muted/30 border border-border rounded-2xl outline-none font-bold text-foreground focus:border-primary/50 focus:bg-background transition-all disabled:opacity-0" 
+              className="w-full px-6 py-4 border border-border rounded-2xl outline-none font-bold text-foreground focus:border-primary/50 transition-all disabled:opacity-0" 
             />
           </div>
           
@@ -143,7 +143,7 @@ export default async function SettingsPage() {
 
       {/* 4. Danger Zone (Delete Team) */}
       {isOwner && teamId.startsWith('team-') && (
-        <div className="bg-muted/10 border border-red-500/10 rounded-3xl p-10 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="border border-red-500/10 rounded-3xl p-10 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="max-w-md text-center md:text-left">
             <h2 className="text-red-500 font-black text-[10px] uppercase tracking-[0.2em] mb-2">Workspace Deletion</h2>
             <p className="text-xs text-muted-foreground font-medium leading-relaxed">

@@ -28,7 +28,7 @@ export default async function DashboardPage() {
           <span className="text-primary uppercase text-3xl tracking-tight">{email.split('@')[0]}</span>
         </h1>
 
-        <div className="bg-background border border-border p-6 rounded-xl shadow-sm flex items-center gap-6 min-w-[280px]">
+        <div className="border border-border p-6 rounded-xl shadow-sm flex items-center gap-6 min-w-[280px]">
           <div className="flex-1">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Available Credits</p>
             <h3 className="text-foreground/80 font-bold text-sm mt-0.5">DataForSEO Balance</h3>
@@ -41,7 +41,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {['Keywords', 'SERP', 'Explorer'].map((item) => (
-          <div key={item} className="bg-background border border-border p-6 rounded-xl shadow-sm hover:border-primary/40 transition-all group">
+          <div key={item} className="border border-border p-6 rounded-xl shadow-sm hover:border-primary/40 transition-all group">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">{item}</p>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-foreground tracking-tighter">0.00</span>

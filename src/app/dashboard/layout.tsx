@@ -24,11 +24,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="flex h-screen bg-background text-foreground font-sans antialiased overflow-hidden">
+    <div className="flex h-screen text-foreground font-sans antialiased overflow-hidden">
       <Sidebar allTeams={allTeams} activeTeamId={activeTeam.id} />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 border-b border-border flex items-center justify-between px-8 bg-background/80 backdrop-blur-md z-10">
+        <header className="h-16 border-b border-border flex items-center justify-between px-8 backdrop-blur-md z-10">
           <div className="flex items-center gap-4">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Balance</span>
             <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 font-mono font-bold text-sm">
@@ -54,7 +54,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <aside className="hidden xl:flex w-72 border-l border-border bg-muted/10 p-8 flex-col gap-8">
             <div className="space-y-4">
               <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Workspace</h2>
-              <div className="p-4 bg-background border border-border rounded-xl space-y-3">
+              <div className="p-4 border border-border rounded-xl space-y-3">
                 <div>
                   <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">Active Team</p>
                   <p className="text-xs font-bold text-foreground truncate mt-0.5">{activeTeam.name}</p>

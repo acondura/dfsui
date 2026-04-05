@@ -53,14 +53,14 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
         <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setIsOpen(!isOpen)}
-            className="w-full flex items-center justify-between p-3 bg-background border border-border rounded-xl hover:border-primary/50 transition-all"
+            className="w-full flex items-center justify-between p-3 border border-border rounded-xl hover:border-primary/50 transition-all"
           >
             <span className="text-xs font-black truncate uppercase tracking-widest">{activeTeam?.name}</span>
             <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </button>
           
           {isOpen && (
-            <div className="absolute bottom-full left-0 w-full mb-2 bg-background border border-border rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2">
+            <div className="absolute bottom-full left-0 w-full mb-2 border border-border rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2">
               {allTeams.map(team => (
                 <button
                   key={team.id}
