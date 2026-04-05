@@ -22,9 +22,9 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
   ];
 
   return (
-    <aside className="w-64 bg-muted/30 flex flex-col shrink-0 border-r border-border z-50">
+    <aside className="w-64 bg-zinc-50 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-50 flex flex-col shrink-0 border-r border-border z-50">
       <div className="p-6">
-        <h1 className="text-foreground text-lg font-black tracking-tighter flex items-center gap-2">
+        <h1 className="text-lg tracking-tighter flex items-center gap-2">
           DFSUI
         </h1>
       </div>
@@ -39,7 +39,7 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
               className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 isActive 
                   ? 'bg-primary text-white shadow-md shadow-primary/20' 
-                  : 'text-foreground/60 hover:bg-muted hover:text-foreground'
+                  : 'hover:bg-muted'
               }`}
             >
               <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
@@ -77,7 +77,7 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
 
         <a 
           href={logoutUrl}
-          className="mt-4 flex items-center gap-3 px-4 py-3 text-xs font-black text-foreground/40 hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
+          className="mt-4 flex items-center gap-3 px-4 py-3 text-xs font-black hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
         >
           <LogOut size={16} /> Sign Out
         </a>

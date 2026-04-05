@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <h1 className="text-4xl font-black text-foreground tracking-tighter leading-tight">
+        <h1 className="text-4xl font-black tracking-tighter leading-tight">
           Welcome back,<br /> 
           <span className="text-primary uppercase text-3xl tracking-tight">{email.split('@')[0]}</span>
         </h1>
@@ -31,9 +31,9 @@ export default async function DashboardPage() {
         <div className="border border-border p-6 rounded-xl shadow-sm flex items-center gap-6 min-w-[280px]">
           <div className="flex-1">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Available Credits</p>
-            <h3 className="text-foreground/80 font-bold text-sm mt-0.5">DataForSEO Balance</h3>
+            <h3 className="font-bold text-sm mt-0.5">DataForSEO Balance</h3>
           </div>
-          <div className="text-2xl font-mono font-bold text-foreground tracking-tighter">
+          <div className="text-2xl font-mono font-bold tracking-tighter">
             <span className="text-primary mr-1">$</span>{balance}
           </div>
         </div>
@@ -44,7 +44,7 @@ export default async function DashboardPage() {
           <div key={item} className="border border-border p-6 rounded-xl shadow-sm hover:border-primary/40 transition-all group">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">{item}</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-foreground tracking-tighter">0.00</span>
+              <span className="text-2xl font-black tracking-tighter">0.00</span>
               <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">credits</span>
             </div>
             <div className="mt-4 h-1 w-full bg-muted rounded-full overflow-hidden">

@@ -24,10 +24,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="flex h-screen text-foreground font-sans antialiased overflow-hidden">
+    <div className="flex h-screen font-sans antialiased overflow-hidden">
       <Sidebar allTeams={allTeams} activeTeamId={activeTeam.id} />
       
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 bg-zinc-50 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 border-b border-border flex items-center justify-between px-8 backdrop-blur-md z-10">
           <div className="flex items-center gap-4">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Balance</span>
@@ -57,7 +57,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <div className="p-4 border border-border rounded-xl space-y-3">
                 <div>
                   <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">Active Team</p>
-                  <p className="text-xs font-bold text-foreground truncate mt-0.5">{activeTeam.name}</p>
+                  <p className="text-xs font-bold truncate mt-0.5">{activeTeam.name}</p>
                 </div>
                 <div className="pt-3 border-t border-border">
                   <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">Team ID</p>

@@ -48,7 +48,6 @@ function decodeJwtUnsafe(jwt: string): string | null {
     const parts = jwt.split('.');
     if (parts.length !== 3) return null;
     const payload = JSON.parse(base64UrlDecode(parts[1]));
-    // Access JWTs usually have 'email', but fallback to 'sub' if necessary
     return (payload.email || payload.sub || null)?.toLowerCase();
   } catch (e) {
     return null;
@@ -61,7 +60,6 @@ async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string 
   
   if (!teamDomain) teamDomain = 'k9czuj5q2zbo29nb';
 
-  // We try both the modern JWKS and the legacy Certs endpoint
   const endpoints = [
     `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`,
     `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/certs`
@@ -104,17 +102,15 @@ async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string 
     return (payload.email as string)?.toLowerCase() || null;
   } catch (e) {
     const email = decodeJwtUnsafe(jwt);
-    // Log the error but return the decoded email so identity works
     console.warn(`Auth: Verification failed for ${email || 'unknown'}. Error: ${e instanceof Error ? e.message : 'Unknown'}`);
     return email;
   }
 }
 
 export async function getIdentity(env: CloudflareEnv): Promise<string> {
-  // 10X Dev Mock: If running locally, return your email immediately
-  // This bypasses the need for Cloudflare Access JWTs on localhost
+  // 10X Dev Mock: Bypasses JWT requirements for local development
   if (process.env.NODE_ENV === 'development') {
-    return 'andrei@condurachi.ro'; // Put your actual email here
+    return 'andrei@condurachi.ro'; 
   }
 
   const headersList = await headers();
@@ -125,7 +121,6 @@ export async function getIdentity(env: CloudflareEnv): Promise<string> {
     if (verifiedEmail) return verifiedEmail;
   }
 
-  // Final fallback to raw headers (if enabled in CF)
   const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
                       headersList.get('Cf-Access-Authenticated-User-Email');
   
@@ -134,6 +129,22 @@ export async function getIdentity(env: CloudflareEnv): Promise<string> {
 
 export async function getTeamContext(env: CloudflareEnv) {
   const email = await getIdentity(env);
+
+  // Safety Guard: Prevents local crashes if KV binding 'dfsui' is missing
+  if (!env?.dfsui) {
+    console.warn("⚠️ KV Binding 'dfsui' not found. Returning guest context.");
+    return { 
+      email, 
+      activeTeam: { id: email, name: 'Personal Workspace (Local)', isOwner: true }, 
+      allTeams: [{ id: email, name: 'Personal Workspace (Local)', isOwner: true }], 
+      dfsUser: null, 
+      dfsPass: null, 
+      members: [email],
+      isConnected: false,
+      isPersonal: true
+    };
+  }
+
   const activeTeamId = await env.dfsui.get(`user:${email}:active-team`) || email;
 
   const teamsRaw = await env.dfsui.get(`user:${email}:teams`);

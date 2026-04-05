@@ -35,7 +35,7 @@ export default async function SettingsPage() {
       {/* 1. Header & Workspace Status */}
       <div className="flex justify-between items-end pb-6 border-b border-border">
         <div>
-          <h1 className="text-4xl font-black text-foreground tracking-tight">{teamName}</h1>
+          <h1 className="text-4xl font-black tracking-tight">{teamName}</h1>
           <p className="text-muted-foreground font-medium mt-1">
             Workspace ID: <span className="font-mono text-xs opacity-60 uppercase">{teamId}</span>
           </p>
@@ -53,7 +53,7 @@ export default async function SettingsPage() {
           <div className="space-y-3">
             {members.map((m) => (
               <div key={m} className="flex justify-between items-center p-4 rounded-2xl border border-border/50 group hover:border-primary/30 transition-all">
-                <span className="text-sm font-bold text-foreground/80">{m}</span>
+                <span className="text-sm font-bold">{m}</span>
                 {m === members[0] ? (
                   <span className="text-[8px] font-black text-primary bg-primary/10 px-2 py-1 rounded-md tracking-widest uppercase border border-primary/20">OWNER</span>
                 ) : (
@@ -117,7 +117,7 @@ export default async function SettingsPage() {
               type="text" 
               defaultValue={isOwner ? (dfsUser || '') : ''} 
               disabled={!isOwner}
-              className="w-full px-6 py-4 border border-border rounded-2xl outline-none font-bold text-foreground focus:border-primary/50 transition-all disabled:opacity-0" 
+              className="w-full px-6 py-4 border border-border rounded-2xl outline-none font-bold focus:border-primary/50 transition-all disabled:opacity-0" 
             />
           </div>
           <div className="space-y-3">
@@ -127,7 +127,7 @@ export default async function SettingsPage() {
               type="password" 
               disabled={!isOwner}
               placeholder={isOwner && dfsPass ? "••••••••••••" : ""} 
-              className="w-full px-6 py-4 border border-border rounded-2xl outline-none font-bold text-foreground focus:border-primary/50 transition-all disabled:opacity-0" 
+              className="w-full px-6 py-4 border border-border rounded-2xl outline-none font-bold focus:border-primary/50 transition-all disabled:opacity-0" 
             />
           </div>
           
