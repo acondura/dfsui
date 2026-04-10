@@ -76,7 +76,7 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
                   </td>
                   <td className="px-2 py-4">
                     <div className="flex items-center gap-3">
-                      <span className="font-black text-slate-950 dark:text-slate-100 text-base tracking-tight uppercase">{item.keyword}</span>
+                      <span className="font-black text-slate-950 dark:text-slate-100 text-base tracking-tight">{item.keyword}</span>
                       <a href={`https://google.com/search?q=${item.keyword}`} target="_blank">
                         <ArrowUpRight size={16} className="text-slate-200 hover:text-slate-900 dark:hover:text-white transition-all" />
                       </a>
