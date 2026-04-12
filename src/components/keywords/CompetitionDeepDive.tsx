@@ -26,7 +26,7 @@ export default function CompetitionDeepDive({ data, keyword }: { data: Competito
   const avgScore = data.reduce((acc, curr) => acc + curr.score, 0) / data.length;
 
   return (
-    <div className="w-full border-t border-slate-900 dark:border-white bg-white dark:bg-black">
+    <div className="w-full border-t border-slate-900 dark:border-white">
       <div className="flex justify-between items-center py-4 px-2 border-b border-slate-100 dark:border-slate-900">
         <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">
           SERP Audit: {keyword}

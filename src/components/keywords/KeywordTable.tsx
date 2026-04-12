@@ -111,7 +111,7 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
                 </tr>
                 {isExpanded && (
                   <tr>
-                    <td colSpan={5} className="px-0 py-8 bg-white dark:bg-black">
+                    <td colSpan={5} className="px-0 py-8">
                       <CompetitionDeepDive data={analysisData[item.keyword]} keyword={item.keyword} />
                     </td>
                   </tr>

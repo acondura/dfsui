@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SearchForm from '@/components/keywords/SearchForm';
 import KeywordTable from '@/components/keywords/KeywordTable';
-import { fetchKeywords } from '@/app/dashboard/keywords/actions';
-import { Coins, Search, AlertCircle } from 'lucide-react';
+import { fetchKeywords, fetchRecentQueries } from '@/app/dashboard/keywords/actions';
+import { Coins, Search, AlertCircle, Clock, ChevronRight, Activity } from 'lucide-react';
 
 export default function KeywordsPage() {
   const [results, setResults] = useState<any[]>([]);
@@ -12,6 +12,15 @@ export default function KeywordsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeLoc, setActiveLoc] = useState('2840');
+  const [recentQueries, setRecentQueries] = useState<any[]>([]);
+  const [loadingRecent, setLoadingRecent] = useState(true);
+
+  useEffect(() => {
+    fetchRecentQueries().then(res => {
+      setRecentQueries(res);
+      setLoadingRecent(false);
+    });
+  }, []);
 
   const handleSearch = async (q: string, loc: string, mode: 'labs' | 'live') => {
     setLoading(true);
@@ -62,10 +71,47 @@ export default function KeywordsPage() {
           </div>
         ) : results.length > 0 ? (
           <KeywordTable results={results} locationCode={activeLoc} />
+        ) : recentQueries.length > 0 ? (
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+            <h2 className="text-lg font-black text-slate-800 dark:text-slate-200 flex items-center gap-2 tracking-tight">
+              <Clock size={16} className="text-slate-400" /> 
+              RECENT QUERIES
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {recentQueries.map((query, idx) => (
+                <button
+                  key={`${query.keyword}-${query.location}-${query.mode}-${idx}`}
+                  onClick={() => handleSearch(query.keyword, query.location, query.mode)}
+                  className="group relative bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 text-left flex flex-col gap-4 hover:-translate-y-1 hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-indigo-500/0 group-hover:from-indigo-50/50 group-hover:to-transparent dark:group-hover:from-indigo-900/10 transition-all duration-500 pointer-events-none" />
+                  
+                  <div className="flex items-start justify-between relative z-10">
+                    <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors capitalize line-clamp-2 pr-4">
+                      {query.keyword}
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+                      <ChevronRight size={16} className="text-indigo-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-400 relative z-10">
+                    <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 dark:text-slate-400">LOC: {query.location}</span>
+                    <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 dark:text-slate-400">MODE: {query.mode}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : !loadingRecent ? (
+          <div className="py-32 flex flex-col items-center justify-center text-center opacity-40 animate-in fade-in">
+            <Activity size={48} className="text-slate-300 dark:text-slate-600 mb-6" />
+            <p className="text-sm font-black text-slate-500 uppercase tracking-[0.3em]">No recent queries</p>
+            <p className="text-xs text-slate-400 mt-2 font-medium">Start your research above to build history</p>
+          </div>
         ) : (
-          <div className="py-32 flex flex-col items-center justify-center text-center opacity-20">
-            <Search size={48} className="text-slate-950 mb-6" />
-            <p className="text-sm text-slate-100 dark:text-slate-900 uppercase tracking-[0.4em]">No results yet</p>
+          <div className="py-32 flex flex-col items-center justify-center text-center">
+             {/* Simple spacer while loading initial queries so the layout doesn't jump aggressively */}
           </div>
         )}
       </div>

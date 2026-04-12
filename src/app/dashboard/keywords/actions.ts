@@ -14,6 +14,16 @@ export interface KeywordItem {
 
 export async function fetchKeywords(keyword: string, location: string, mode: 'labs' | 'live') {
   const { env } = getRequestContext() as { env: CloudflareEnv };
+  const email = await getIdentity(env);
+  const locCode = parseInt(location) || 2840;
+  const kvKey = `keywords:${email}:${locCode}:${mode}:${keyword.replace(/\s+/g, '_')}`;
+
+  const cached = await env.dfsui.get(kvKey);
+  if (cached) {
+    console.log(`[KV Cache Hit] Keywords: ${keyword}`);
+    return { results: JSON.parse(cached), cost: 0 };
+  }
+
   const { dfsUser, dfsPass } = await getTeamContext(env);
   if (!dfsUser || !dfsPass) return { results: [], cost: 0, error: "Credentials missing." };
 
@@ -22,7 +32,7 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
     ? 'https://api.dataforseo.com/v3/dataforseo_labs/google/related_keywords/live'
     : 'https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live';
 
-  const locCode = parseInt(location) || 2840;
+
   const payload = mode === 'labs' 
     ? [{ keyword, location_code: locCode, language_name: "English", limit: 20 }]
     : [{ keywords: [keyword], location_code: locCode, language_code: 1000, include_seed_keyword: true }];
@@ -45,10 +55,43 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
         }))
       : rawItems;
 
+    if (results.length > 0) {
+      await env.dfsui.put(kvKey, JSON.stringify(results), { 
+        expirationTtl: 604800,
+        metadata: { timestamp: Date.now() }
+      });
+      console.log(`[KV Cache Miss] Saved keywords: ${keyword}`);
+    }
+
     revalidatePath('/dashboard/keywords'); 
     return { results, cost: task?.cost || 0 };
   } catch (_e) { return { results: [], cost: 0, error: "API Connection Failed" }; }
 }
+
+export async function fetchRecentQueries() {
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  const email = await getIdentity(env);
+  
+  try {
+    const list = await env.dfsui.list({ prefix: `keywords:${email}:` });
+    const queries = list.keys.map(key => {
+      const parts = key.name.split(':');
+      const timestamp = (key.metadata as any)?.timestamp || 0;
+      return {
+        location: parts[2],
+        mode: parts[3] as 'labs' | 'live',
+        keyword: parts.slice(4).join(':').replace(/_/g, ' '),
+        timestamp
+      };
+    });
+    
+    // Sort by timestamp descending
+    return queries.sort((a, b) => b.timestamp - a.timestamp);
+  } catch (e) {
+    return [];
+  }
+}
+
 
 export async function getLocations(mode: 'labs' | 'live') {
   const { env } = getRequestContext() as { env: CloudflareEnv };
