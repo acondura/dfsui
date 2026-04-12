@@ -1,6 +1,11 @@
 // src/lib/auth.ts
 import { headers } from 'next/headers';
 import { importJWK, jwtVerify } from 'jose';
+import { z } from 'zod';
+
+// Security Schema: Ensures data is a valid email and prevents injection
+const emailSchema = z.string().email().toLowerCase().trim();
+const teamIdSchema = z.string().min(1).trim();
 
 export interface CloudflareEnv {
   dfsui: KVNamespace;
@@ -49,7 +54,7 @@ function decodeJwtUnsafe(jwt: string): string | null {
     if (parts.length !== 3) return null;
     const payload = JSON.parse(base64UrlDecode(parts[1]));
     return (payload.email || payload.sub || null)?.toLowerCase();
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -58,16 +63,15 @@ async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string 
   let teamDomain = (env.NEXT_PUBLIC_CF_TEAM_DOMAIN || process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN || '').trim();
   teamDomain = teamDomain.replace(/^https?:\/\//, '').replace('.cloudflareaccess.com', '').split('/')[0];
   
-  if (!teamDomain) teamDomain = 'k9czuj5q2zbo29nb';
+  if (!teamDomain) return null;
 
+  // Restored multi-endpoint logic for JWKS and Certs
   const endpoints = [
     `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`,
     `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/certs`
   ];
 
   let keys: JWK[] = [];
-  let lastError = "";
-
   for (const url of endpoints) {
     try {
       const response = await fetch(url, {
@@ -75,7 +79,6 @@ async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string 
         headers: { 'Accept': 'application/json', 'User-Agent': 'DFSUI-Auth' },
         next: { revalidate: 3600 }
       });
-
       if (response.ok) {
         const data = await response.json() as { keys: JWK[] };
         if (data.keys?.length > 0) {
@@ -83,32 +86,30 @@ async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string 
           break;
         }
       }
-      lastError = `Status ${response.status}`;
-    } catch (e) {
-      lastError = e instanceof Error ? e.message : "Fetch failed";
+    } catch {
+      continue;
     }
   }
 
   try {
-    if (keys.length === 0) throw new Error(`Key fetch failed: ${lastError}`);
+    if (keys.length === 0) return null;
     
-    const jwk = keys[0]; 
-    const publicKey = await importJWK(jwk, 'RS256');
-    
+    // Attempt verification with the first available key
+    const publicKey = await importJWK(keys[0], 'RS256');
     const { payload } = await jwtVerify(jwt, publicKey, {
       issuer: `https://${teamDomain}.cloudflareaccess.com`,
     });
 
-    return (payload.email as string)?.toLowerCase() || null;
+    const validated = emailSchema.safeParse(payload.email);
+    return validated.success ? validated.data : null;
   } catch (e) {
-    const email = decodeJwtUnsafe(jwt);
-    console.warn(`Auth: Verification failed for ${email || 'unknown'}. Error: ${e instanceof Error ? e.message : 'Unknown'}`);
-    return email;
+    const attemptedEmail = decodeJwtUnsafe(jwt);
+    console.error(`Security Alert: Invalid JWT for ${attemptedEmail || 'unknown'}. Error: ${e instanceof Error ? e.message : 'Unknown'}`);
+    return null; // FAIL CLOSED
   }
 }
 
 export async function getIdentity(env: CloudflareEnv): Promise<string> {
-  // 10X Dev Mock: Bypasses JWT requirements for local development
   if (process.env.NODE_ENV === 'development') {
     return 'andrei@condurachi.ro'; 
   }
@@ -124,57 +125,62 @@ export async function getIdentity(env: CloudflareEnv): Promise<string> {
   const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
                       headersList.get('Cf-Access-Authenticated-User-Email');
   
-  return headerEmail?.toLowerCase() || 'user';
+  const validated = emailSchema.safeParse(headerEmail);
+  if (validated.success) return validated.data;
+
+  throw new Error("Unauthorized: Identity could not be verified.");
 }
 
 export async function getTeamContext(env: CloudflareEnv) {
   const email = await getIdentity(env);
 
-  // Safety Guard: Prevents local crashes if KV binding 'dfsui' is missing
   if (!env?.dfsui) {
-    console.warn("⚠️ KV Binding 'dfsui' not found. Returning guest context.");
     return { 
       email, 
       activeTeam: { id: email, name: 'Personal Workspace (Local)', isOwner: true }, 
       allTeams: [{ id: email, name: 'Personal Workspace (Local)', isOwner: true }], 
-      dfsUser: null, 
-      dfsPass: null, 
-      members: [email],
-      isConnected: false,
-      isPersonal: true
+      dfsUser: null, dfsPass: null, members: [email], isConnected: false, isPersonal: true
     };
   }
 
-  const activeTeamId = await env.dfsui.get(`user:${email}:active-team`) || email;
+  const activeTeamIdRaw = await env.dfsui.get(`user:${email}:active-team`) || email;
+  const activeTeamId = teamIdSchema.parse(activeTeamIdRaw);
 
   const teamsRaw = await env.dfsui.get(`user:${email}:teams`);
   const teamIds = teamsRaw ? (JSON.parse(teamsRaw) as string[]) : [];
   if (!teamIds.includes(email)) teamIds.push(email);
 
   const allTeams = await Promise.all(teamIds.map(async (id) => {
-    const name = await env.dfsui.get(`team:${id}:name`);
-    const membersRaw = await env.dfsui.get(`team:${id}:members`);
-    const members = membersRaw ? (JSON.parse(membersRaw) as string[]) : [id];
+    const safeId = teamIdSchema.parse(id);
+    const [name, membersRaw] = await Promise.all([
+      env.dfsui.get(`team:${safeId}:name`),
+      env.dfsui.get(`team:${safeId}:members`)
+    ]);
+    
+    const members = membersRaw ? (JSON.parse(membersRaw) as string[]) : [safeId];
     return {
-      id,
-      name: name || (id === email ? 'Personal Workspace' : id.split('-')[0]),
-      isOwner: id === email || members[0] === email
+      id: safeId,
+      name: name || (safeId === email ? 'Personal Workspace' : safeId.split('-')[0]),
+      isOwner: safeId === email || members[0] === email
     };
   }));
 
   const activeTeam = allTeams.find(t => t.id === activeTeamId) || allTeams[0];
-  const dfsUser = await env.dfsui.get(`team:${activeTeam.id}:dfs-user`);
-  const dfsPass = await env.dfsui.get(`team:${activeTeam.id}:dfs-pass`);
-  const membersRaw = await env.dfsui.get(`team:${activeTeam.id}:members`);
+
+  const [dfsUser, dfsPass, membersRaw] = await Promise.all([
+    env.dfsui.get(`team:${activeTeam.id}:dfs-user`),
+    env.dfsui.get(`team:${activeTeam.id}:dfs-pass`),
+    env.dfsui.get(`team:${activeTeam.id}:members`)
+  ]);
+
   const members = membersRaw ? (JSON.parse(membersRaw) as string[]) : [activeTeam.id];
 
+  if (!members.includes(email) && activeTeam.id !== email) {
+    throw new Error("Unauthorized: Access to this team is forbidden.");
+  }
+
   return { 
-    email, 
-    activeTeam, 
-    allTeams, 
-    dfsUser, 
-    dfsPass, 
-    members, 
+    email, activeTeam, allTeams, dfsUser, dfsPass, members, 
     isConnected: !!(dfsUser && dfsPass),
     isPersonal: activeTeam.id === email
   };
