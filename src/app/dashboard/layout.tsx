@@ -46,26 +46,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         <div className="flex-1 flex overflow-hidden">
           <main className="flex-1 overflow-y-auto px-8 py-10">
-            <div className="max-w-6xl mx-auto">
+            <div>
               {children}
             </div>
           </main>
-          
-          <aside className="hidden xl:flex w-72 border-l border-border bg-muted/10 p-8 flex-col gap-8">
-            <div className="space-y-4">
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Workspace</h2>
-              <div className="p-4 border border-border rounded-xl space-y-3">
-                <div>
-                  <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">Active Team</p>
-                  <p className="text-xs font-bold truncate mt-0.5">{activeTeam.name}</p>
-                </div>
-                <div className="pt-3 border-t border-border">
-                  <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">Team ID</p>
-                  <p className="text-[10px] font-mono text-muted-foreground truncate mt-0.5 uppercase">{activeTeam.id}</p>
-                </div>
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
     </div>

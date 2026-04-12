@@ -65,7 +65,7 @@ export default function KeywordsPage() {
         ) : (
           <div className="py-32 flex flex-col items-center justify-center text-center opacity-20">
             <Search size={48} className="text-slate-950 mb-6" />
-            <p className="text-sm font-black text-slate-950 uppercase tracking-[0.4em]">No results yet</p>
+            <p className="text-sm text-slate-100 dark:text-slate-900 uppercase tracking-[0.4em]">No results yet</p>
           </div>
         )}
       </div>
