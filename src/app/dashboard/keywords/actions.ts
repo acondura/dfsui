@@ -34,7 +34,7 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
 
 
   const payload = mode === 'labs' 
-    ? [{ keyword, location_code: locCode, language_name: "English", limit: 20 }]
+    ? [{ keyword, location_code: locCode, language_name: "English", limit: 100 }]
     : [{ keywords: [keyword], location_code: locCode, language_code: 1000, include_seed_keyword: true }];
 
   try {

@@ -54,7 +54,7 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
             <button
               key={loc.code}
               onClick={() => setLocation(loc.code)}
-              className={`px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-tight border-2 transition-all ${
+              className={`px-2 py-1 rounded-lg text-xs font-black uppercase tracking-tight border-2 transition-all ${
                 location === loc.code ? 'bg-slate-950 text-white border-slate-950' : 'bg-white border-slate-200 text-slate-900 hover:border-slate-950'
               }`}
             >
@@ -64,7 +64,7 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
           
           <button 
             onClick={() => setIsLocOpen(!isLocOpen)}
-            className="px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-tight border-2 border-slate-200 text-slate-900 bg-white hover:border-slate-950 flex items-center gap-2"
+            className="px-2 py-1 rounded-lg text-xs font-black uppercase tracking-tight border-2 border-slate-200 text-slate-900 bg-white hover:border-slate-950 flex items-center gap-2"
           >
             <Globe size={14} /> Custom
           </button>
