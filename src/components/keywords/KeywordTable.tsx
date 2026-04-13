@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { BarChart3, Loader2, ArrowUpRight, CheckSquare, Square, RefreshCcw } from 'lucide-react';
+import { BarChart3, Loader2, ArrowUpRight, CheckSquare, Square, RefreshCcw, ArrowDown, ArrowUp } from 'lucide-react';
 import { analyzeCompetition, KeywordItem } from '@/app/dashboard/keywords/actions';
 import CompetitionDeepDive from '@/components/keywords/CompetitionDeepDive';
 
@@ -10,9 +10,40 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
   const [loadingKw, setLoadingKw] = useState<string | null>(null);
   const [selectedKws, setSelectedKws] = useState<string[]>([]);
 
+  const [sortField, setSortField] = useState<'keyword' | 'volume' | 'cpc'>('volume');
+  const [sortDesc, setSortDesc] = useState(true);
+
   const sortedResults = useMemo(() => {
-    return [...results].sort((a, b) => (b.keyword_info?.search_volume || 0) - (a.keyword_info?.search_volume || 0));
-  }, [results]);
+    return [...results].sort((a, b) => {
+      if (sortField === 'keyword') {
+        const aVal = a.keyword || '';
+        const bVal = b.keyword || '';
+        return sortDesc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+      } else if (sortField === 'volume') {
+        const aVal = a.keyword_info?.search_volume || 0;
+        const bVal = b.keyword_info?.search_volume || 0;
+        return sortDesc ? bVal - aVal : aVal - bVal;
+      } else {
+        const aVal = a.keyword_info?.cpc || 0;
+        const bVal = b.keyword_info?.cpc || 0;
+        return sortDesc ? bVal - aVal : aVal - bVal;
+      }
+    });
+  }, [results, sortField, sortDesc]);
+
+  const handleSort = (field: 'keyword' | 'volume' | 'cpc') => {
+    if (sortField === field) {
+      setSortDesc(!sortDesc);
+    } else {
+      setSortField(field);
+      setSortDesc(field === 'keyword' ? false : true);
+    }
+  };
+
+  const getSortIcon = (field: 'keyword' | 'volume' | 'cpc') => {
+    if (sortField !== field) return null;
+    return sortDesc ? <ArrowDown size={12} className="inline mb-0.5 ml-1" /> : <ArrowUp size={12} className="inline mb-0.5 ml-1" />;
+  };
 
   const toggleSelect = (kw: string) => {
     setSelectedKws(prev => prev.includes(kw) ? prev.filter(i => i !== kw) : [...prev, kw]);
@@ -42,6 +73,11 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
 
   return (
     <div className="w-full">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-xs font-black uppercase text-slate-400 tracking-widest px-1">
+          {results.length.toLocaleString()} Keywords Found
+        </span>
+      </div>
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b-2 border-slate-900 dark:border-white">
@@ -53,9 +89,24 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
                 {selectedKws.length === results.length ? <CheckSquare size={20} className="text-slate-950 dark:text-white" /> : <Square size={20} className="text-slate-200" />}
               </button>
             </th>
-            <th className="px-2 py-5 text-[11px] font-black uppercase text-slate-400 tracking-[0.2em]">Keyword</th>
-            <th className="px-4 py-5 text-[11px] font-black uppercase text-slate-400 tracking-[0.2em] text-right">Volume</th>
-            <th className="px-4 py-5 text-[11px] font-black uppercase text-slate-400 tracking-[0.2em] text-right">CPC</th>
+            <th 
+              className="px-2 py-5 text-[11px] font-black uppercase text-slate-400 tracking-[0.2em] cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors"
+              onClick={() => handleSort('keyword')}
+            >
+              Keyword {getSortIcon('keyword')}
+            </th>
+            <th 
+              className="px-4 py-5 text-[11px] font-black uppercase text-slate-400 tracking-[0.2em] text-right cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors"
+              onClick={() => handleSort('volume')}
+            >
+              Volume {getSortIcon('volume')}
+            </th>
+            <th 
+              className="px-4 py-5 text-[11px] font-black uppercase text-slate-400 tracking-[0.2em] text-right cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors"
+              onClick={() => handleSort('cpc')}
+            >
+              CPC {getSortIcon('cpc')}
+            </th>
             {/* Action Header with Refresh Text */}
             <th className="w-24 px-4 py-5 text-right no-print">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Audit</span>

@@ -73,9 +73,9 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
         <div className="flex items-center gap-8">
           <div className="flex p-1 bg-slate-100 rounded-xl border-2 border-slate-200">
             <button onClick={() => setMode('labs')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'labs' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-950'}`}>Labs</button>
-            <button onClick={() => setMode('live')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'live' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-950'}`}>Live</button>
+            <button onClick={() => setMode('live')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'live' ? 'bg-white text-slate-50 shadow-sm' : 'text-slate-500 hover:text-slate-50'}`}>Live</button>
           </div>
-          <div className="text-[10px] font-black uppercase text-slate-950 flex items-center gap-2 tracking-[0.1em] border-l-2 border-slate-200 pl-6">
+          <div className="text-[12px] font-black uppercase text-slate-950 dark:text-slate-50 flex items-center gap-2 tracking-[0.1em] border-l-2 border-slate-200 pl-6">
             <Coins size={14} className="text-slate-400" /> ${mode === 'labs' ? '0.01' : '0.05'}
           </div>
         </div>

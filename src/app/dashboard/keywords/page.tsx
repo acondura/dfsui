@@ -46,6 +46,7 @@ export default function KeywordsPage() {
       } else {
         setResults(data.results);
         setCost(data.cost);
+        fetchRecentQueries().then(res => setRecentQueries(res));
       }
     } catch (err) {
       setError("An unexpected error occurred.");

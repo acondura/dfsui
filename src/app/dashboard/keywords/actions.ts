@@ -16,7 +16,7 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const email = await getIdentity(env);
   const locCode = parseInt(location) || 2840;
-  const kvKey = `keywords:${email}:${locCode}:${mode}:${keyword.replace(/\s+/g, '_')}`;
+  const kvKey = `keywords_v2:${email}:${locCode}:${mode}:${keyword.replace(/\s+/g, '_')}`;
 
   if (!bypassCache) {
     const cached = await env.dfsui.get(kvKey);
@@ -31,12 +31,12 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
 
   const auth = btoa(`${dfsUser}:${dfsPass}`);
   const endpoint = mode === 'labs'
-    ? 'https://api.dataforseo.com/v3/dataforseo_labs/google/related_keywords/live'
+    ? 'https://api.dataforseo.com/v3/dataforseo_labs/google/keyword_ideas/live'
     : 'https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live';
 
 
   const payload = mode === 'labs' 
-    ? [{ keyword, location_code: locCode, language_name: "English", limit: 1000 }]
+    ? [{ keywords: [keyword], location_code: locCode, language_name: "English", limit: 1000 }]
     : [{ keywords: [keyword], location_code: locCode, language_code: 1000, include_seed_keyword: true }];
 
   try {
@@ -52,8 +52,8 @@ export async function fetchKeywords(keyword: string, location: string, mode: 'la
     const rawItems = task?.result?.[0]?.items || [];
     const results = mode === 'labs' 
       ? rawItems.map((i: any) => ({
-          keyword: i.keyword_data?.keyword || 'Unknown',
-          keyword_info: i.keyword_data?.keyword_info
+          keyword: i.keyword || i.keyword_data?.keyword || 'Unknown',
+          keyword_info: i.keyword_info || i.keyword_data?.keyword_info
         }))
       : rawItems;
 
@@ -75,7 +75,7 @@ export async function fetchRecentQueries() {
   const email = await getIdentity(env);
   
   try {
-    const list = await env.dfsui.list({ prefix: `keywords:${email}:` });
+    const list = await env.dfsui.list({ prefix: `keywords_v2:${email}:` });
     const queries = list.keys.map(key => {
       const parts = key.name.split(':');
       const timestamp = (key.metadata as any)?.timestamp || 0;
