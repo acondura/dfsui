@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import SearchForm from '@/components/keywords/SearchForm';
 import KeywordTable from '@/components/keywords/KeywordTable';
 import { fetchKeywords, fetchRecentQueries } from '@/app/dashboard/keywords/actions';
-import { Coins, Search, AlertCircle, Clock, ChevronRight, Activity } from 'lucide-react';
+import { Coins, Search, AlertCircle, Clock, ChevronRight, Activity, RefreshCcw } from 'lucide-react';
 
 export default function KeywordsPage() {
   const [results, setResults] = useState<any[]>([]);
@@ -14,6 +14,7 @@ export default function KeywordsPage() {
   const [activeLoc, setActiveLoc] = useState('2840');
   const [recentQueries, setRecentQueries] = useState<any[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
+  const [lastSearch, setLastSearch] = useState<{q: string, loc: string, mode: 'labs' | 'live'} | null>(null);
 
   useEffect(() => {
     fetchRecentQueries().then(res => {
@@ -22,12 +23,13 @@ export default function KeywordsPage() {
     });
   }, []);
 
-  const handleSearch = async (q: string, loc: string, mode: 'labs' | 'live') => {
+  const handleSearch = async (q: string, loc: string, mode: 'labs' | 'live', bypassCache = false) => {
     setLoading(true);
     setError(null);
     setActiveLoc(loc);
+    setLastSearch({ q, loc, mode });
     try {
-      const data = await fetchKeywords(q, loc, mode);
+      const data = await fetchKeywords(q, loc, mode, bypassCache);
       if (data.error) {
         setError(data.error);
         setResults([]);
@@ -70,7 +72,17 @@ export default function KeywordsPage() {
             <p className="text-xs font-black uppercase text-slate-400 tracking-[0.3em]">Querying DataForSEO...</p>
           </div>
         ) : results.length > 0 ? (
-          <KeywordTable results={results} locationCode={activeLoc} />
+          <div className="space-y-4 animate-in fade-in duration-500">
+            <div className="flex justify-end no-print">
+              <button 
+                onClick={() => lastSearch && handleSearch(lastSearch.q, lastSearch.loc, lastSearch.mode, true)}
+                className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:text-slate-500 dark:hover:text-white border-2 border-slate-200 dark:border-slate-800 hover:border-slate-900 dark:hover:border-slate-600 rounded-lg transition-all"
+              >
+                <RefreshCcw size={14} /> Refresh from API
+              </button>
+            </div>
+            <KeywordTable results={results} locationCode={activeLoc} />
+          </div>
         ) : recentQueries.length > 0 ? (
           <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
             <h2 className="text-lg font-black text-slate-800 dark:text-slate-200 flex items-center gap-2 tracking-tight">

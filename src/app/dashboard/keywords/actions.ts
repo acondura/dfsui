@@ -12,16 +12,18 @@ export interface KeywordItem {
   };
 }
 
-export async function fetchKeywords(keyword: string, location: string, mode: 'labs' | 'live') {
+export async function fetchKeywords(keyword: string, location: string, mode: 'labs' | 'live', bypassCache = false) {
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const email = await getIdentity(env);
   const locCode = parseInt(location) || 2840;
   const kvKey = `keywords:${email}:${locCode}:${mode}:${keyword.replace(/\s+/g, '_')}`;
 
-  const cached = await env.dfsui.get(kvKey);
-  if (cached) {
-    console.log(`[KV Cache Hit] Keywords: ${keyword}`);
-    return { results: JSON.parse(cached), cost: 0 };
+  if (!bypassCache) {
+    const cached = await env.dfsui.get(kvKey);
+    if (cached) {
+      console.log(`[KV Cache Hit] Keywords: ${keyword}`);
+      return { results: JSON.parse(cached), cost: 0 };
+    }
   }
 
   const { dfsUser, dfsPass } = await getTeamContext(env);
