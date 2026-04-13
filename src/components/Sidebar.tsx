@@ -36,6 +36,11 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
             <Link
               key={item.name}
               href={item.href}
+              onClick={() => {
+                if (isActive && item.name === 'Keywords') {
+                  window.dispatchEvent(new Event('reset-keywords'));
+                }
+              }}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 isActive 
                   ? 'bg-primary text-white shadow-md shadow-primary/20' 

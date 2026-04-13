@@ -27,7 +27,7 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
     .slice(0, 5);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-1">
       <div className="flex flex-col lg:flex-row gap-3">
         <div className="flex-1 relative">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-900" size={24} />
@@ -48,7 +48,7 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t-2 border-slate-100">
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-4">
         <div className="flex items-center gap-3">
           {quickLocations.map((loc) => (
             <button

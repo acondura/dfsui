@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import SearchForm from '@/components/keywords/SearchForm';
 import KeywordTable from '@/components/keywords/KeywordTable';
 import { fetchKeywords, fetchRecentQueries } from '@/app/dashboard/keywords/actions';
-import { Coins, Search, AlertCircle, Clock, ChevronRight, Activity, RefreshCcw } from 'lucide-react';
+import { Coins, Search, AlertCircle, Clock, ChevronRight, Activity, RefreshCcw, ArrowLeft } from 'lucide-react';
 
 export default function KeywordsPage() {
   const [results, setResults] = useState<any[]>([]);
@@ -15,12 +15,22 @@ export default function KeywordsPage() {
   const [recentQueries, setRecentQueries] = useState<any[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [lastSearch, setLastSearch] = useState<{q: string, loc: string, mode: 'labs' | 'live'} | null>(null);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  const totalPages = Math.ceil(recentQueries.length / itemsPerPage);
+  const currentQueries = recentQueries.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   useEffect(() => {
     fetchRecentQueries().then(res => {
       setRecentQueries(res);
       setLoadingRecent(false);
     });
+    
+    const handleReset = () => setResults([]);
+    window.addEventListener('reset-keywords', handleReset);
+    return () => window.removeEventListener('reset-keywords', handleReset);
   }, []);
 
   const handleSearch = async (q: string, loc: string, mode: 'labs' | 'live', bypassCache = false) => {
@@ -73,7 +83,14 @@ export default function KeywordsPage() {
           </div>
         ) : results.length > 0 ? (
           <div className="space-y-4 animate-in fade-in duration-500">
-            <div className="flex justify-end no-print">
+            <div className="flex items-center justify-between no-print">
+              <button 
+                onClick={() => setResults([])}
+                className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:text-slate-500 dark:hover:text-white border-2 border-slate-200 dark:border-slate-800 hover:border-slate-900 dark:hover:border-slate-600 rounded-lg transition-all"
+              >
+                <ArrowLeft size={14} /> Back
+              </button>
+
               <button 
                 onClick={() => lastSearch && handleSearch(lastSearch.q, lastSearch.loc, lastSearch.mode, true)}
                 className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:text-slate-500 dark:hover:text-white border-2 border-slate-200 dark:border-slate-800 hover:border-slate-900 dark:hover:border-slate-600 rounded-lg transition-all"
@@ -89,30 +106,68 @@ export default function KeywordsPage() {
               <Clock size={16} className="text-slate-400" /> 
               RECENT QUERIES
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {recentQueries.map((query, idx) => (
-                <button
-                  key={`${query.keyword}-${query.location}-${query.mode}-${idx}`}
-                  onClick={() => handleSearch(query.keyword, query.location, query.mode)}
-                  className="group relative bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 text-left flex flex-col gap-4 hover:-translate-y-1 hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-indigo-500/0 group-hover:from-indigo-50/50 group-hover:to-transparent dark:group-hover:from-indigo-900/10 transition-all duration-500 pointer-events-none" />
-                  
-                  <div className="flex items-start justify-between relative z-10">
-                    <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors capitalize line-clamp-2 pr-4">
-                      {query.keyword}
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-                      <ChevronRight size={16} className="text-indigo-500" />
-                    </div>
+            
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Keyword</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Location</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Mode</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                    {currentQueries.map((query, idx) => (
+                      <tr key={`${query.keyword}-${query.location}-${query.mode}-${idx}`} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                        <td className="px-6 py-4">
+                          <button 
+                            onClick={() => handleSearch(query.keyword, query.location, query.mode)}
+                            className="font-bold text-slate-900 dark:text-slate-100 text-base lowercase hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-2"
+                          >
+                            {query.keyword}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 font-mono text-xs uppercase text-slate-500">{query.location}</td>
+                        <td className="px-6 py-4 font-mono text-xs uppercase text-slate-500">{query.mode}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button 
+                            onClick={() => handleSearch(query.keyword, query.location, query.mode)}
+                            className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-lg transition-colors inline-flex items-center gap-2"
+                          >
+                            Research <ChevronRight size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className="px-4 py-2 border-2 border-slate-200 dark:border-slate-700 disabled:opacity-30 hover:border-slate-900 dark:hover:border-slate-500 rounded-lg text-xs font-black uppercase tracking-widest transition-all text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                    >
+                      Prev
+                    </button>
+                    <button 
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className="px-4 py-2 border-2 border-slate-200 dark:border-slate-700 disabled:opacity-30 hover:border-slate-900 dark:hover:border-slate-500 rounded-lg text-xs font-black uppercase tracking-widest transition-all text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                    >
+                      Next
+                    </button>
                   </div>
-                  
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-400 relative z-10">
-                    <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 dark:text-slate-400">LOC: {query.location}</span>
-                    <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 dark:text-slate-400">MODE: {query.mode}</span>
-                  </div>
-                </button>
-              ))}
+                </div>
+              )}
             </div>
           </div>
         ) : !loadingRecent ? (

@@ -58,7 +58,7 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
             <th className="px-4 py-5 text-[11px] font-black uppercase text-slate-400 tracking-[0.2em] text-right">CPC</th>
             {/* Action Header with Refresh Text */}
             <th className="w-24 px-4 py-5 text-right no-print">
-               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Audit</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Audit</span>
             </th>
           </tr>
         </thead>
