@@ -12,6 +12,9 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
 
   const [sortField, setSortField] = useState<'keyword' | 'volume' | 'cpc'>('volume');
   const [sortDesc, setSortDesc] = useState(true);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
 
   const sortedResults = useMemo(() => {
     return [...results].sort((a, b) => {
@@ -38,12 +41,16 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
       setSortField(field);
       setSortDesc(field === 'keyword' ? false : true);
     }
+    setCurrentPage(1); // Reset to first page on sort
   };
 
   const getSortIcon = (field: 'keyword' | 'volume' | 'cpc') => {
     if (sortField !== field) return null;
     return sortDesc ? <ArrowDown size={12} className="inline mb-0.5 ml-1" /> : <ArrowUp size={12} className="inline mb-0.5 ml-1" />;
   };
+
+  const totalPages = Math.ceil(sortedResults.length / itemsPerPage);
+  const currentResults = sortedResults.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const toggleSelect = (kw: string) => {
     setSelectedKws(prev => prev.includes(kw) ? prev.filter(i => i !== kw) : [...prev, kw]);
@@ -114,7 +121,7 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-900">
-          {sortedResults.map((item: any) => {
+          {currentResults.map((item: any) => {
             const isSelected = selectedKws.includes(item.keyword);
             const isExpanded = !!analysisData[item.keyword];
             return (
@@ -172,6 +179,30 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
           })}
         </tbody>
       </table>
+
+      {true && (
+        <div className="flex items-center justify-between px-6 py-4 mt-4 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900/50">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Page {currentPage} of {totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <button 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              className="px-4 py-2 border-2 border-slate-200 dark:border-slate-700 disabled:opacity-30 hover:border-slate-900 dark:hover:border-slate-500 rounded-lg text-xs font-black uppercase tracking-widest transition-all text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            >
+              Prev
+            </button>
+            <button 
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              className="px-4 py-2 border-2 border-slate-200 dark:border-slate-700 disabled:opacity-30 hover:border-slate-900 dark:hover:border-slate-500 rounded-lg text-xs font-black uppercase tracking-widest transition-all text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
