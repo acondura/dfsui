@@ -111,7 +111,7 @@ async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string 
 
 export async function getIdentity(env: CloudflareEnv): Promise<string> {
   if (process.env.NODE_ENV === 'development') {
-    return 'andrei@condurachi.ro'; 
+    return 'admin@example.com'; 
   }
 
   const headersList = await headers();
