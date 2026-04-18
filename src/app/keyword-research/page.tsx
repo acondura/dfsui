@@ -107,11 +107,12 @@ export default function KeywordResearchLanding() {
             <div className="flex-1 relative">
               <div className="relative z-10 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(5,150,105,0.2)] border border-slate-200 dark:border-slate-800 animate-float">
                 <Image 
-                  src="/dashboard_mockup_seo_roadmap_1776494369292.png" 
+                  src="https://r2.dfsui.com/keyword-research-dashboard.png" 
                   alt="DFSUI Dashboard Mockup" 
                   width={800} 
                   height={600} 
                   className="w-full h-auto"
+                  unoptimized // R2 images don't need Next.js optimization if served via CDN
                 />
               </div>
               {/* Decorative Background Elements */}
