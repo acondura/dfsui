@@ -57,7 +57,22 @@ const localDictionaries: { [lang: string]: Dictionary } = {
     source: 'Source',
     engine: 'Engine',
     personal: 'Personal',
-    ideas: 'Ideas'
+    ideas: 'Ideas',
+    filter_results: 'Filter results...',
+    refresh_all: 'Refresh All',
+    questions: 'Questions',
+    bulk_est_cost: 'Bulk Est. Cost',
+    audit_keywords: 'Audit {count} Keywords',
+    show: 'Show',
+    navigational: 'Navigational',
+    informational: 'Informational',
+    commercial: 'Commercial',
+    transactional: 'Transactional',
+    labs: 'Labs',
+    live: 'Live',
+    loading: 'Loading...',
+    tooltip_api_source: 'LABS: Ultra-fast historical data (2B+ keywords). LIVE: Real-time data direct from Google Ads (requires more credits).',
+    tooltip_method: 'SUGGESTIONS: Keywords containing your seed. IDEAS: Related terms and broad variations based on user intent.'
   },
   hi: {
     dashboard: 'डैशबोर्ड',
@@ -107,7 +122,22 @@ const localDictionaries: { [lang: string]: Dictionary } = {
     source: 'स्रोत',
     engine: 'इंजन',
     personal: 'व्यक्तिगत',
-    ideas: 'विचार'
+    ideas: 'विचार',
+    filter_results: 'परिणामों को फ़िल्टर करें...',
+    refresh_all: 'सभी को रिफ्रेश करें',
+    questions: 'सवाल',
+    bulk_est_cost: 'थोक अनुमानित लागत',
+    audit_keywords: '{count} कीवर्ड्स का ऑडिट करें',
+    show: 'देखें',
+    navigational: 'नेविगेशनल',
+    informational: 'सूचनात्मक',
+    commercial: 'व्यावसायिक',
+    transactional: 'लेन-देन संबंधी',
+    labs: 'लैब्स',
+    live: 'लाइव',
+    loading: 'लोड हो रहा है...',
+    tooltip_api_source: 'लैब्स: अल्ट्रा-फास्ट ऐतिहासिक डेटा (2B+ कीवर्ड)। लाइव: सीधे Google Ads से रीयल-टाइम डेटा (अधिक क्रेडिट की आवश्यकता है)।',
+    tooltip_method: 'सुझाव: आपके बीज वाले कीवर्ड। विचार: उपयोगकर्ता के इरादे के आधार पर संबंधित शब्द और व्यापक बदलाव।'
   },
   ro: {
     dashboard: 'Panou',
@@ -157,7 +187,22 @@ const localDictionaries: { [lang: string]: Dictionary } = {
     source: 'Sursă',
     engine: 'Motor',
     personal: 'Personal',
-    ideas: 'Idei'
+    ideas: 'Idei',
+    filter_results: 'Filtrează rezultatele...',
+    refresh_all: 'Actualizează Tot',
+    questions: 'Întrebări',
+    bulk_est_cost: 'Cost Estimativ Total',
+    audit_keywords: 'Audit {count} Cuvinte Cheie',
+    show: 'Afișează',
+    navigational: 'Navigațional',
+    informational: 'Informațional',
+    commercial: 'Comercial',
+    transactional: 'Tranzacțional',
+    labs: 'Labs',
+    live: 'Live',
+    loading: 'Se încarcă...',
+    tooltip_api_source: 'LABS: Date istorice ultra-rapide (2B+ cuvinte cheie). LIVE: Date în timp real direct din Google Ads (necesită mai multe credite).',
+    tooltip_method: 'SUGESTII: Cuvinte cheie care conțin sămânța ta. IDEI: Termeni înrudiți și variații largi bazate pe intenția utilizatorului.'
   }
 };
 

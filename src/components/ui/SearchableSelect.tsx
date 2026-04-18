@@ -47,6 +47,7 @@ export default function SearchableSelect({ label, options, value, onChange, plac
       
       <button
         onClick={() => setIsOpen(!isOpen)}
+        suppressHydrationWarning
         className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 focus:border-slate-900 dark:focus:border-slate-400 rounded-xl font-bold text-xs outline-none transition-all uppercase tracking-widest text-left"
       >
         <span className="truncate">
@@ -65,6 +66,7 @@ export default function SearchableSelect({ label, options, value, onChange, plac
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder={placeholder}
+                suppressHydrationWarning
                 className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-slate-900 dark:focus:border-slate-400 rounded-xl text-xs font-bold outline-none transition-all uppercase tracking-widest"
               />
             </div>

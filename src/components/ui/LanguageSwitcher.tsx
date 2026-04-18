@@ -25,6 +25,7 @@ export default function LanguageSwitcher() {
     <div className="relative mb-6">
       <button 
         onClick={() => setIsOpen(!isOpen)}
+        suppressHydrationWarning
         className="w-full flex items-center justify-between p-3 bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-primary/50 transition-all group"
       >
         <div className="flex items-center gap-2">

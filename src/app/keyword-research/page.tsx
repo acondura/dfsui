@@ -60,7 +60,7 @@ export default function KeywordResearchLanding() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 selection:bg-primary/20">
       {/* Navigation */}
       <header className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-900">
-        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
             <span className="text-primary">DFS</span>UI
           </Link>
@@ -75,7 +75,7 @@ export default function KeywordResearchLanding() {
 
       {/* Hero Section */}
       <section className="pt-40 pb-20 overflow-hidden">
-        <div className="container mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row items-center gap-16">
             <div className="flex-1 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest mb-6 animate-fade-in">
@@ -123,7 +123,7 @@ export default function KeywordResearchLanding() {
 
       {/* Steps Section */}
       <section id="steps" className="py-32 bg-white dark:bg-slate-900/50 relative">
-        <div className="container mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-6">How It Works</h2>
             <p className="text-lg text-slate-500 font-medium">We've distilled years of SEO consulting expertise into a 4-step automated workflow.</p>
@@ -150,7 +150,7 @@ export default function KeywordResearchLanding() {
 
       {/* Advantage Section */}
       <section id="advantages" className="py-32">
-        <div className="container mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row gap-20">
             <div className="lg:w-1/3">
               <div className="sticky top-32">
@@ -185,7 +185,7 @@ export default function KeywordResearchLanding() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-32 container mx-auto px-6">
+      <section className="py-32 max-w-5xl mx-auto px-6">
         <div className="bg-primary rounded-[3rem] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-2xl shadow-primary/30">
           <div className="relative z-10">
             <h2 className="text-4xl md:text-6xl font-black mb-8 leading-tight tracking-tight">Ready to stop guessing?</h2>
@@ -207,7 +207,7 @@ export default function KeywordResearchLanding() {
 
       {/* Footer */}
       <footer className="py-20 border-t border-slate-200 dark:border-slate-900">
-        <div className="container mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-10">
             <Link href="/" className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">
               <span className="text-primary">DFS</span>UI
@@ -216,7 +216,7 @@ export default function KeywordResearchLanding() {
               <Link href="/" className="hover:text-primary transition-colors">Home</Link>
               <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
               <a href="https://github.com/acondura/dfsui" target="_blank" className="hover:text-primary transition-colors">GitHub</a>
-              <Link href="/dashboard/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>
+              <Link href="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>
             </div>
             <p className="text-xs font-bold text-slate-400">© {new Date().getFullYear()} DFS UI. Built for the modern SEO.</p>
           </div>

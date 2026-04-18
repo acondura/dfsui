@@ -15,7 +15,7 @@ export default function HomePage() {
 
       {/* HEADER */}
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800/50">
-        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-2xl shadow-primary/40 group-hover:rotate-12 transition-all duration-300">
               <Zap size={22} className="text-white fill-current" />
@@ -24,13 +24,13 @@ export default function HomePage() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-10">
-            <Link href="/dashboard" className="text-sm font-bold text-zinc-500 hover:text-primary dark:text-zinc-400 dark:hover:text-primary transition-colors">Platform</Link>
+            <Link href="/dashboard" className="text-sm font-bold text-zinc-500 hover:text-primary dark:text-zinc-400 dark:hover:text-primary transition-colors">Dashboard</Link>
             <Link href="/keyword-research" className="text-sm font-bold text-zinc-500 hover:text-primary dark:text-zinc-400 dark:hover:text-primary transition-colors">Strategy</Link>
             <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
             <a 
               href="https://github.com/acondura/dfsui" 
               target="_blank" 
-              className="group flex items-center gap-2 text-xs font-black bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-3 rounded-xl hover:scale-105 active:scale-95 transition-all uppercase tracking-widest shadow-2xl shadow-zinc-900/20 dark:shadow-none"
+              className="group flex items-center gap-2 text-xs font-black bg-zinc-950 dark:bg-white text-dark dark:text-zinc-950 px-6 py-3 rounded-xl hover:bg-primary hover:text-white dark:hover:bg-primary transition-all uppercase tracking-widest shadow-lg shadow-zinc-950/20 dark:shadow-none"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current group-hover:rotate-12 transition-transform" aria-hidden="true"><path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"></path></svg>
               GitHub
@@ -40,11 +40,8 @@ export default function HomePage() {
       </header>
 
       {/* HERO SECTION */}
-      <main className="relative z-10 container mx-auto px-6 pt-24 md:pt-40 pb-40 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-           <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
-           <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Advanced Keyword Intelligence Engine</span>
-        </div>
+      <main className="relative z-10 max-w-5xl mx-auto px-6 pt-24 md:pt-40 pb-40 text-center">
+        <div className="h-20" />
 
         <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-zinc-950 dark:text-white mb-12 leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
           Dominate the <br className="hidden md:block" />
@@ -53,16 +50,16 @@ export default function HomePage() {
           </span>
         </h1>
         
-        <p className="text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 mb-16 max-w-3xl mx-auto leading-relaxed font-bold animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
+        <p className="text-lg md:text-2xl text-zinc-500 dark:text-zinc-400 mb-6 max-w-3xl mx-auto leading-relaxed font-bold animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
           The high-performance open-source interface for DataForSEO. Built for speed, precision, and actionable SEO insights.
         </p>
         
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300 mb-8">
           <Link 
             href="/dashboard" 
             className="group w-full sm:w-auto px-10 py-5 bg-primary text-white text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-black shadow-2xl shadow-primary/40 transition-all flex items-center justify-center gap-3"
           >
-            Launch Terminal
+            Launch Dashboard
             <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
           </Link>
           <Link 
@@ -76,7 +73,7 @@ export default function HomePage() {
 
       {/* FEATURES SECTION */}
       <section className="relative z-10 bg-zinc-50 dark:bg-zinc-900/40 border-y border-zinc-200 dark:border-zinc-800 py-32 md:py-48">
-        <div className="container mx-auto px-6 max-w-6xl">
+        <div className="max-w-5xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-24">
             
             {/* Feature 1 */}
@@ -118,7 +115,7 @@ export default function HomePage() {
 
       {/* CAPABILITIES */}
       <section className="relative z-10 py-32 md:py-56 overflow-hidden">
-        <div className="container mx-auto px-6 max-w-6xl text-center">
+        <div className="max-w-5xl mx-auto px-6 text-center">
            <h2 className="text-4xl md:text-7xl font-black text-zinc-950 dark:text-white mb-24 md:mb-32 tracking-tighter uppercase italic leading-[1.1]">Professional <br className="md:hidden" /> Capabilities</h2>
            
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
@@ -159,7 +156,7 @@ export default function HomePage() {
 
       {/* FOOTER */}
       <footer className="relative z-10 py-24 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-12">
+        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="flex flex-col items-center md:items-start gap-4">
             <div className="flex items-center gap-2">
               <Zap size={20} className="text-primary fill-current" />
@@ -172,6 +169,7 @@ export default function HomePage() {
             <Link href="/dashboard" className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-primary transition-colors">Launch</Link>
             <Link href="/keyword-research" className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-primary transition-colors">Strategy</Link>
             <a href="https://github.com/acondura/dfsui" target="_blank" className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-primary transition-colors">GitHub</a>
+            <Link href="/disclaimer" className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-primary transition-colors">Disclaimer</Link>
           </div>
         </div>
       </footer>

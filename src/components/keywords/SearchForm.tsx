@@ -71,6 +71,7 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
             value={query} 
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && query.trim() && onSearch(query, location, apiType, labsFunction, engine, language)}
+            suppressHydrationWarning
             className="w-full pl-14 pr-3 py-4 bg-slate-100 dark:bg-slate-800 border-2 border-transparent focus:border-slate-900 rounded-xl font-black text-2xl outline-none transition-all text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
             placeholder={t('seed_keyword')}
           />
@@ -89,26 +90,26 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
         <div className="space-y-2">
             <div className="flex items-center px-1">
                 <label className="text-xs font-black uppercase tracking-widest text-slate-500 block">{t('api_source')}</label>
-                <InfoTooltip content="LABS: Ultra-fast historical data (2B+ keywords). LIVE: Real-time data direct from Google Ads (requires more credits)." />
+                <InfoTooltip content={t('tooltip_api_source')} />
             </div>
             <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700">
-                <button onClick={() => setApiType('labs')} suppressHydrationWarning className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${apiType === 'labs' ? 'bg-white dark:bg-zinc-700 text-slate-950 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-950 dark:hover:text-white'}`}>Labs</button>
-                <button onClick={() => setApiType('live')} suppressHydrationWarning className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${apiType === 'live' ? 'bg-white dark:bg-zinc-700 text-slate-950 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-950 dark:hover:text-white'}`}>Live</button>
+                <button onClick={() => setApiType('labs')} suppressHydrationWarning className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${apiType === 'labs' ? 'bg-white dark:bg-zinc-700 text-slate-950 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-950 dark:hover:text-white'}`}>{t('labs')}</button>
+                <button onClick={() => setApiType('live')} suppressHydrationWarning className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${apiType === 'live' ? 'bg-white dark:bg-zinc-700 text-slate-950 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-950 dark:hover:text-white'}`}>{t('live')}</button>
             </div>
         </div>
 
         <div className="space-y-2">
             <div className="flex items-center px-1">
                 <label className="text-xs font-black uppercase tracking-widest text-slate-500 block">{t('method')}</label>
-                <InfoTooltip content="SUGGESTIONS: Keywords containing your seed. IDEAS: Related terms and broad variations based on user intent." />
+                <InfoTooltip content={t('tooltip_method')} />
             </div>
             <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700">
                 {apiType === 'labs' ? (
                     labsFunctions.map(f => (
-                        <button key={f.id} onClick={() => setLabsFunction(f.id as any)} suppressHydrationWarning className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${labsFunction === f.id ? 'bg-white dark:bg-zinc-700 text-slate-950 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-950 dark:hover:text-white'}`}>{f.name}</button>
+                        <button key={f.id} onClick={() => setLabsFunction(f.id as any)} suppressHydrationWarning className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${labsFunction === f.id ? 'bg-white dark:bg-zinc-700 text-slate-950 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-950 dark:hover:text-white'}`}>{t(f.id.replace('keyword_', ''))}</button>
                     ))
                 ) : (
-                    <button suppressHydrationWarning className="flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest bg-white dark:bg-zinc-700 text-slate-950 dark:text-white shadow-sm">Suggestions</button>
+                    <button suppressHydrationWarning className="flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-widest bg-white dark:bg-zinc-700 text-slate-950 dark:text-white shadow-sm">{t('suggestions')}</button>
                 )}
             </div>
         </div>
@@ -122,14 +123,14 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
 
         <SearchableSelect 
             label={t('language')}
-            options={languages.length > 0 ? languages : [{ label: 'LOADING...', value: 'English' }]}
+            options={languages.length > 0 ? languages : [{ label: t('loading').toUpperCase(), value: 'English' }]}
             value={language}
             onChange={setLanguage}
         />
 
         <SearchableSelect 
             label={t('location')}
-            options={locations.length > 0 ? locations : [{ label: 'LOADING...', value: '' }]}
+            options={locations.length > 0 ? locations : [{ label: t('loading').toUpperCase(), value: '' }]}
             value={location}
             onChange={setLocation}
         />

@@ -44,7 +44,7 @@ export default async function AnalysisPage({ params }: { params: { slug: string 
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
       {/* Premium Header/Hero */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="space-y-4 max-w-3xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-black uppercase tracking-widest">
@@ -72,7 +72,7 @@ export default async function AnalysisPage({ params }: { params: { slug: string 
       </div>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-6 py-12 space-y-12">
+      <main className="max-w-5xl mx-auto px-6 py-12 space-y-12">
         
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -138,7 +138,7 @@ export default async function AnalysisPage({ params }: { params: { slug: string 
 
       {/* Modern Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 py-12 bg-white dark:bg-slate-950">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-slate-950 dark:bg-white rounded flex items-center justify-center font-black text-white dark:text-black">D</div>
                 <span className="font-black tracking-tighter text-xl">DFSUI</span>

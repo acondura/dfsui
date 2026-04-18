@@ -24,7 +24,6 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
     { name: t('dashboard'), href: '/dashboard', icon: LayoutDashboard },
     { name: t('keywords'), href: '/dashboard/keywords', icon: Search },
     { name: t('settings'), href: '/dashboard/settings', icon: Settings },
-    { name: t('disclaimer'), href: '/dashboard/disclaimer', icon: ShieldAlert },
   ];
 
   // Helper to translate team names

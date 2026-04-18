@@ -39,17 +39,17 @@ const PeakSeasonBadge = ({ data, onClick }: { data?: { year: number, month: numb
 };
 
 const IntentBadge = ({ intent }: { intent?: string }) => {
+  const { t } = useI18n();
   if (!intent) return null;
-  const colorMap: Record<string, string> = {
-    'informational': 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
-    'transactional': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
-    'commercial': 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400',
-    'navigational': 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
+  const colors: Record<string, string> = {
+    'informational': 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+    'transactional': 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+    'commercial': 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
+    'navigational': 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
   };
-  const color = colorMap[intent.toLowerCase()] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400';
   return (
-    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${color}`}>
-      {intent}
+    <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter border ${colors[intent.toLowerCase()] || 'bg-slate-500/10 text-slate-500 border-slate-500/20'}`}>
+      {t(intent.toLowerCase())}
     </span>
   );
 };
@@ -477,7 +477,7 @@ export default function KeywordTable({
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input 
                     type="text"
-                    placeholder="Filter results..."
+                    placeholder={t('filter_results')}
                     value={filterText}
                     onChange={(e) => setFilterText(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-white transition-all"
@@ -493,7 +493,7 @@ export default function KeywordTable({
                 <div className={`w-4 h-4 rounded border-2 transition-all flex items-center justify-center ${overwriteExisting ? 'bg-slate-950 border-slate-950 dark:bg-white dark:border-white' : 'border-slate-300 group-hover:border-slate-400'}`}>
                     {overwriteExisting && <Check size={10} className="text-white dark:text-black stroke-[4]" />}
                 </div>
-                <span className="text-xs font-black uppercase text-slate-500 group-hover:text-slate-950 dark:group-hover:text-white tracking-widest transition-colors">Refresh All</span>
+                <span className="text-xs font-black uppercase text-slate-500 group-hover:text-slate-950 dark:group-hover:text-white tracking-widest transition-colors">{t('refresh_all')}</span>
             </button>
 
             <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block" />
@@ -502,13 +502,13 @@ export default function KeywordTable({
                 onClick={() => setShowQuestionsOnly(!showQuestionsOnly)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 transition-all ${showQuestionsOnly ? 'bg-primary border-primary text-white shadow-md shadow-primary/20' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
             >
-                <span className="text-[10px] font-black uppercase tracking-widest">Questions</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">{t('questions')}</span>
             </button>
         </div>
 
         <div className="flex items-center gap-4 w-full md:w-auto">
             <div className="text-right hidden sm:block">
-                <div className="text-[11px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">Bulk Est. Cost</div>
+                <div className="text-[11px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">{t('bulk_est_cost')}</div>
                 <div className="text-base font-black text-slate-950 dark:text-white leading-none">${bulkCost.toFixed(2)}</div>
             </div>
             <button 
@@ -517,7 +517,7 @@ export default function KeywordTable({
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-lg ${isBulkLoading ? 'bg-slate-100 text-slate-400' : 'bg-slate-950 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-slate-200 shadow-slate-950/10'}`}
             >
                 {isBulkLoading ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} className="fill-current" />}
-                {isBulkLoading ? 'Auditing...' : `Audit ${remainingToAudit} Keywords`}
+                {isBulkLoading ? t('querying_dataforseo') : t('audit_keywords').replace('{count}', remainingToAudit.toString())}
             </button>
         </div>
       </div>
