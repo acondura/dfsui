@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { BarChart3, Loader2, ArrowUpRight, CheckSquare, Square, RefreshCcw, ArrowDown, ArrowUp, Zap, Check, Search, X } from 'lucide-react';
-import { analyzeCompetition, KeywordItem, getSerpPrice } from '@/app/dashboard/keywords/actions';
+import { BarChart3, Loader2, ArrowUpRight, CheckSquare, Square, RefreshCcw, ArrowDown, ArrowUp, Zap, Check, Search, X, Globe } from 'lucide-react';
+import { analyzeCompetition, KeywordItem, getSerpPrice, togglePseoPublish } from '@/app/dashboard/keywords/actions';
 import CompetitionDeepDive from '@/components/keywords/CompetitionDeepDive';
 
 const PeakSeasonBadge = ({ data, onClick }: { data?: { year: number, month: number, search_volume: number }[], onClick?: () => void }) => {
@@ -303,7 +303,17 @@ const TrendModal = ({ keyword, data, onClose }: { keyword: string, data: { year:
 
 import { useI18n } from '@/lib/i18n';
 
-export default function KeywordTable({ results, locationCode }: { results: KeywordItem[], locationCode: string }) {
+export default function KeywordTable({ 
+  results, 
+  locationCode, 
+  isAdmin = false, 
+  initialPublished = [] 
+}: { 
+  results: KeywordItem[], 
+  locationCode: string, 
+  isAdmin?: boolean,
+  initialPublished?: string[]
+}) {
   const { t } = useI18n();
   const [analysisData, setAnalysisData] = useState<Record<string, any>>({});
   const [expandedKws, setExpandedKws] = useState<string[]>([]);
@@ -315,6 +325,21 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
   const [filterText, setFilterText] = useState('');
   const [showQuestionsOnly, setShowQuestionsOnly] = useState(false);
   const [trendModalData, setTrendModalData] = useState<{ keyword: string, data: any[] } | null>(null);
+  const [published, setPublished] = useState<string[]>(initialPublished);
+
+  const handleTogglePseo = async (keyword: string) => {
+    try {
+        const analysis = analysisData[keyword];
+        const { published: isNowPublished } = await togglePseoPublish(keyword, analysis);
+        if (isNowPublished) {
+            setPublished(prev => [...prev, keyword]);
+        } else {
+            setPublished(prev => prev.filter(k => k !== keyword));
+        }
+    } catch (e) {
+        console.error("pSEO toggle failed", e);
+    }
+  };
 
   useEffect(() => {
     getSerpPrice().then(setSerpPrice);
@@ -595,6 +620,15 @@ export default function KeywordTable({ results, locationCode }: { results: Keywo
                       )}
                       
                       <div className="flex items-center gap-1">
+                        {isAdmin && (
+                            <button 
+                            onClick={() => handleTogglePseo(item.keyword)}
+                            className={`p-2 transition-all ${published.includes(item.keyword) ? 'text-primary' : 'text-slate-300 hover:text-slate-900 dark:hover:text-white'}`}
+                            title={published.includes(item.keyword) ? "Unpublish from pSEO" : "Publish to pSEO"}
+                            >
+                            <Globe size={16} />
+                            </button>
+                        )}
                         {analysis && (
                             <button 
                             onClick={() => handleAudit(item.keyword, true)}

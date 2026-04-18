@@ -179,8 +179,29 @@ export async function getTeamContext(env: CloudflareEnv) {
     throw new Error("Unauthorized: Access to this team is forbidden.");
   }
 
+  // Multi-Admin Logic: The first person to log in becomes the initial admin
+  const adminRaw = await env.dfsui.get('app:admin');
+  let adminEmails: string[] = [];
+  
+  if (adminRaw) {
+    try {
+      const parsed = JSON.parse(adminRaw);
+      adminEmails = Array.isArray(parsed) ? parsed : [adminRaw];
+    } catch {
+      // Legacy support: if it's a plain string like "admin@example.com"
+      adminEmails = [adminRaw];
+    }
+  }
+  
+  if (adminEmails.length === 0) {
+    adminEmails = [email];
+    await env.dfsui.put('app:admin', JSON.stringify(adminEmails));
+  }
+  
+  const isAdmin = adminEmails.includes(email);
+
   return { 
-    email, activeTeam, allTeams, dfsUser, dfsPass, members, 
+    email, activeTeam, allTeams, dfsUser, dfsPass, members, isAdmin,
     isConnected: !!(dfsUser && dfsPass),
     isPersonal: activeTeam.id === email
   };

@@ -25,6 +25,9 @@ export default function KeywordsPage() {
     language: string
   } | null>(null);
   
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [publishedKws, setPublishedKws] = useState<string[]>([]);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
@@ -35,6 +38,12 @@ export default function KeywordsPage() {
     fetchRecentQueries().then(res => {
       setRecentQueries(res);
       setLoadingRecent(false);
+    });
+
+    // Fetch Admin & pSEO data
+    import('@/app/dashboard/keywords/actions').then(actions => {
+      actions.getAdminStatus().then(status => setIsAdmin(!!status));
+      actions.getPublishedKeywords().then(kws => setPublishedKws(kws || []));
     });
     
     const handleReset = () => setResults([]);
@@ -124,7 +133,12 @@ export default function KeywordsPage() {
                 <RefreshCcw size={14} /> {t('refresh_from_api')}
               </button>
             </div>
-            <KeywordTable results={results} locationCode={activeLoc} />
+            <KeywordTable 
+              results={results} 
+              locationCode={activeLoc} 
+              isAdmin={isAdmin}
+              initialPublished={publishedKws}
+            />
           </div>
         ) : lastSearch && !loading ? (
           <div className="py-24 flex flex-col items-center justify-center text-center space-y-8 animate-in zoom-in-95 duration-500">

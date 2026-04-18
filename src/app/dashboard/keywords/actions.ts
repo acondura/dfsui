@@ -349,3 +349,62 @@ export async function analyzeCompetition(keyword: string, locationCode: string, 
     return { analysis: [], cost: 0, cached: false }; 
   }
 }
+/**
+ * pSEO: Toggle Publish Status
+ */
+export async function togglePseoPublish(keyword: string, analysisData?: any) {
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  const { isAdmin, email } = await getTeamContext(env);
+  
+  if (!isAdmin) throw new Error("Unauthorized: Admin access required.");
+
+  const kvKey = 'pseo:published';
+  const raw = await env.dfsui.get(kvKey);
+  let published: string[] = raw ? JSON.parse(raw) : [];
+
+  const slug = keyword.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const publicDataKey = `pseo:analysis:${slug}`;
+
+  if (published.includes(keyword)) {
+    published = published.filter(k => k !== keyword);
+    await env.dfsui.delete(publicDataKey);
+  } else {
+    published.push(keyword);
+    // If analysis data provided, save it as the public version
+    if (analysisData) {
+      await env.dfsui.put(publicDataKey, JSON.stringify({
+        keyword,
+        analysis: analysisData,
+        publishedAt: new Date().toISOString(),
+        author: email
+      }));
+    }
+  }
+
+  await env.dfsui.put(kvKey, JSON.stringify(published));
+  revalidatePath('/dashboard/keywords');
+  return { published: published.includes(keyword) };
+}
+
+/**
+ * pSEO: Get all published keywords
+ */
+export async function getPublishedKeywords() {
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  const kvKey = 'pseo:published';
+  const raw = await env.dfsui.get(kvKey);
+  return raw ? (JSON.parse(raw) as string[]) : [];
+}
+
+/**
+ * Check if current user is admin
+ */
+export async function getAdminStatus() {
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  try {
+    const { isAdmin } = await getTeamContext(env);
+    return isAdmin;
+  } catch {
+    return false;
+  }
+}

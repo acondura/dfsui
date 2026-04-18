@@ -1,5 +1,5 @@
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { updateSettings, createTeam, addMember, deleteTeam } from './actions';
+import { updateSettings, createTeam, addMember, deleteTeam, addAdmin, removeAdmin, getAdminList } from './actions';
 import { getTeamContext, CloudflareEnv, DFUserResponse } from '@/lib/auth';
 
 export const runtime = 'edge';
@@ -8,12 +8,16 @@ export default async function SettingsPage() {
   const { env } = getRequestContext() as { env: CloudflareEnv };
   
   const { 
+    email,
     activeTeam: { id: teamId, name: teamName, isOwner }, 
     members, 
+    isAdmin,
     dfsUser, 
     dfsPass, 
     isConnected 
   } = await getTeamContext(env);
+
+  const adminList = isAdmin ? await getAdminList() : [];
 
   let balance = 0;
   if (isConnected && dfsUser && dfsPass) {
@@ -95,7 +99,51 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      {/* 3. API Credentials */}
+      {/* 3. Global Administrator Management (Only for Admins) */}
+      {isAdmin && (
+        <div className="border-2 border-slate-900 dark:border-slate-100 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <span className="text-6xl">🛡️</span>
+          </div>
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-950 dark:text-white mb-6 flex items-center gap-2">
+            Global Administrators
+            <span className="bg-slate-950 text-white dark:bg-white dark:text-black px-2 py-0.5 rounded text-[8px] tracking-widest">ADMIN ONLY</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              {adminList.map((admin) => (
+                <div key={admin} className="flex justify-between items-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-sm font-bold truncate pr-2">{admin}</span>
+                  {admin === email ? (
+                    <span className="text-[9px] font-black opacity-30 uppercase tracking-widest italic">YOU</span>
+                  ) : (
+                    <form action={async (formData) => { 'use server'; await removeAdmin(admin); }}>
+                       <button type="submit" className="text-[10px] font-black text-red-500 hover:text-red-700 transition-colors uppercase tracking-widest">REVOKE</button>
+                    </form>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-4">
+                Administrators can manage pSEO keywords, switch teams, and control global system settings. Be careful who you authorize.
+              </p>
+              <form action={async (formData) => { 'use server'; await addAdmin(formData.get('newAdmin') as string); }} className="flex gap-2">
+                <input 
+                  name="newAdmin" 
+                  type="email" 
+                  placeholder="admin@email.com" 
+                  className="flex-1 px-5 py-3 rounded-2xl text-sm font-medium border border-slate-200 dark:border-slate-800 focus:border-slate-900 transition-all" 
+                  required 
+                />
+                <button type="submit" className="px-6 py-3 bg-slate-950 dark:bg-white dark:text-black text-white text-xs font-black rounded-2xl hover:opacity-80 transition-all tracking-widest">AUTHORIZE</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. API Credentials */}
       <div className="border border-border rounded-3xl p-10 shadow-sm relative overflow-hidden">
         {!isOwner && (
           <div className="absolute inset-0 backdrop-blur-sm z-20 flex items-center justify-center">
@@ -141,7 +189,7 @@ export default async function SettingsPage() {
         </form>
       </div>
 
-      {/* 4. Danger Zone (Delete Team) */}
+      {/* 5. Danger Zone (Delete Team) */}
       {isOwner && teamId.startsWith('team-') && (
         <div className="border border-red-500/10 rounded-3xl p-10 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="max-w-md text-center md:text-left">
