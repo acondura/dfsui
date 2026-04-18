@@ -6,8 +6,12 @@ import { LayoutDashboard, Search, Globe, Settings, LogOut, ChevronDown, Check, S
 import { switchTeam } from '@/app/dashboard/settings/actions';
 import { Team } from '@/lib/auth';
 
+import { useI18n } from '@/lib/i18n';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+
 export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Team[], activeTeamId?: string }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -17,11 +21,17 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
   const logoutUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/logout?returnTo=${encodeURIComponent('https://dfsui.com')}`;
 
   const menuItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Keywords', href: '/dashboard/keywords', icon: Search },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-    { name: 'Disclaimer', href: '/dashboard/disclaimer', icon: ShieldAlert },
+    { name: t('dashboard'), href: '/dashboard', icon: LayoutDashboard },
+    { name: t('keywords'), href: '/dashboard/keywords', icon: Search },
+    { name: t('settings'), href: '/dashboard/settings', icon: Settings },
+    { name: t('disclaimer'), href: '/dashboard/disclaimer', icon: ShieldAlert },
   ];
+
+  // Helper to translate team names
+  const translateTeamName = (name: string) => {
+    if (name === 'Personal Workspace') return t('personal');
+    return name;
+  };
 
   // Close mobile menu on path change
   useEffect(() => {
@@ -54,9 +64,11 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="p-6 flex items-center justify-between">
-          <h1 className="text-lg tracking-tighter flex items-center gap-2 font-black">
-            DFSUI
-          </h1>
+          <Link href="/" className="group">
+            <h1 className="text-xl tracking-tighter flex items-center gap-2 font-black group-hover:text-primary transition-colors">
+              DFSUI
+            </h1>
+          </Link>
           <button 
             onClick={() => setIsMobileOpen(false)}
             className="lg:hidden p-1 hover:bg-muted rounded-lg transition-colors"
@@ -70,14 +82,9 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
             const isActive = pathname === item.href;
             return (
               <Link
-                key={item.name}
+                key={item.href}
                 href={item.href}
-                onClick={() => {
-                  if (isActive && item.name === 'Keywords') {
-                    window.dispatchEvent(new Event('reset-keywords'));
-                  }
-                }}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-bold transition-all ${
                   isActive 
                     ? 'bg-primary text-white shadow-md shadow-primary/20' 
                     : 'hover:bg-muted'
@@ -91,12 +98,15 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
         </nav>
 
         <div className="p-4 border-t border-border">
+          <LanguageSwitcher />
+
           <div className="relative" ref={dropdownRef}>
             <button 
               onClick={() => setIsOpen(!isOpen)}
+              suppressHydrationWarning
               className="w-full flex items-center justify-between p-3 border border-border rounded-xl hover:border-primary/50 transition-all"
             >
-              <span className="text-xs font-black truncate uppercase tracking-widest">{activeTeam?.name}</span>
+              <span className="text-sm font-black truncate uppercase tracking-widest">{translateTeamName(activeTeam?.name || '')}</span>
               <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             
@@ -106,9 +116,9 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
                   <button
                     key={team.id}
                     onClick={() => switchTeam(team.id)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold hover:bg-muted text-left"
+                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold hover:bg-muted text-left"
                   >
-                    {team.name}
+                    {translateTeamName(team.name)}
                     {team.id === activeTeamId && <Check size={14} className="text-primary" />}
                   </button>
                 ))}
@@ -118,9 +128,9 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
 
           <a 
             href={logoutUrl}
-            className="mt-4 flex items-center gap-3 px-4 py-3 text-xs font-black hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
+            className="mt-4 flex items-center gap-3 px-4 py-3 text-sm font-black hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
           >
-            <LogOut size={16} /> Sign Out
+            <LogOut size={16} /> {t('sign_out')}
           </a>
         </div>
       </aside>

@@ -3,7 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #1a1c1e;
-  --primary: 107, 212, 161;
+  --primary: 5, 150, 105;
   --muted: #f4f5f7;
   --muted-foreground: #64748b;
   --border: #eef0f2;
@@ -46,7 +46,7 @@
 
   /* Forțăm coloanele de date să fie vizibile */
   .text-primary {
-    color: rgb(107, 212, 161) !important;
+    color: rgb(5, 150, 105) !important;
     -webkit-print-color-adjust: exact;
   }
 }

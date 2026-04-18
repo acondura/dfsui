@@ -76,7 +76,7 @@ export default function DisclaimerPage() {
       </div>
 
       <div className="pt-8 border-t border-slate-200 dark:border-slate-800">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 text-center">
           Last Updated: April 17, 2026 • DFSUI.COM
         </p>
       </div>

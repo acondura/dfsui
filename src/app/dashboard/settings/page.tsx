@@ -37,11 +37,11 @@ export default async function SettingsPage() {
         <div>
           <h1 className="text-4xl font-black tracking-tight">{teamName}</h1>
           <p className="text-muted-foreground font-medium mt-1">
-            Workspace ID: <span className="font-mono text-xs opacity-60 uppercase">{teamId}</span>
+            Workspace ID: <span className="font-mono text-sm opacity-60 uppercase">{teamId}</span>
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-black uppercase text-muted-foreground/40 tracking-[0.2em] mb-1">Available Funds</p>
+          <p className="text-xs font-black uppercase text-muted-foreground/40 tracking-[0.2em] mb-1">Available Funds</p>
           <p className="text-3xl font-mono font-bold text-primary tracking-tighter">${balance.toFixed(2)}</p>
         </div>
       </div>
@@ -49,15 +49,15 @@ export default async function SettingsPage() {
       {/* 2. Team Management Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="border border-border rounded-3xl p-8 shadow-sm">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-6">Team Members</h3>
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-6">Team Members</h3>
           <div className="space-y-3">
             {members.map((m) => (
               <div key={m} className="flex justify-between items-center p-4 rounded-2xl border border-border/50 group hover:border-primary/30 transition-all">
-                <span className="text-sm font-bold">{m}</span>
+                <span className="text-base font-bold">{m}</span>
                 {m === members[0] ? (
-                  <span className="text-[8px] font-black text-primary bg-primary/10 px-2 py-1 rounded-md tracking-widest uppercase border border-primary/20">OWNER</span>
+                  <span className="text-[11px] font-black text-primary bg-primary/10 px-2 py-1 rounded-md tracking-widest uppercase border border-primary/20">OWNER</span>
                 ) : (
-                  <span className="text-[8px] font-black text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors uppercase tracking-widest">MEMBER</span>
+                  <span className="text-[11px] font-black text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors uppercase tracking-widest">MEMBER</span>
                 )}
               </div>
             ))}
@@ -71,14 +71,14 @@ export default async function SettingsPage() {
                 className="flex-1 px-5 py-3 rounded-2xl text-sm font-medium outline-none border border-transparent focus:border-primary/30 transition-all" 
                 required 
               />
-              <button type="submit" className="px-6 py-3 bg-primary text-white text-[10px] font-black rounded-2xl hover:opacity-90 transition-all shadow-md shadow-primary/20 tracking-widest">ADD</button>
+              <button type="submit" className="px-6 py-3 bg-primary text-white text-xs font-black rounded-2xl hover:opacity-90 transition-all shadow-md shadow-primary/20 tracking-widest">ADD</button>
             </form>
           )}
         </div>
 
         <div className="bg-primary rounded-3xl p-8 text-white shadow-xl shadow-primary/10 relative overflow-hidden group">
           <div className="relative z-10">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-6">Create New Workspace</h3>
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60 mb-6">Create New Workspace</h3>
             <form action={createTeam} className="space-y-4">
               <input 
                 name="teamName" 
@@ -87,7 +87,7 @@ export default async function SettingsPage() {
                 className="w-full px-5 py-4 bg-white/10 border border-white/20 rounded-2xl text-sm placeholder:text-white/40 outline-none focus:bg-white/20 transition-all font-bold" 
                 required 
               />
-              <button type="submit" className="w-full py-4 bg-white text-primary font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-muted transition-all shadow-lg">Confirm Creation</button>
+              <button type="submit" className="w-full py-4 bg-white text-primary font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-muted transition-all shadow-lg">Confirm Creation</button>
             </form>
           </div>
           {/* Decorative subtle pulse */}
@@ -101,17 +101,17 @@ export default async function SettingsPage() {
           <div className="absolute inset-0 backdrop-blur-sm z-20 flex items-center justify-center">
             <div className="px-6 py-3 rounded-2xl border border-border shadow-2xl flex items-center gap-3">
               <span className="text-xl">🔒</span>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
                 ReadOnly Workspace Access
               </p>
             </div>
           </div>
         )}
 
-        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-10">DataForSEO API Connectivity</h3>
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-10">DataForSEO API Connectivity</h3>
         <form action={updateSettings} className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div className="space-y-3">
-            <label className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-[0.2em] ml-1">Username (Login)</label>
+            <label className="text-xs font-black text-muted-foreground/60 uppercase tracking-[0.2em] ml-1">Username (Login)</label>
             <input 
               name="login" 
               type="text" 
@@ -121,7 +121,7 @@ export default async function SettingsPage() {
             />
           </div>
           <div className="space-y-3">
-            <label className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-[0.2em] ml-1">Password (API Key)</label>
+            <label className="text-xs font-black text-muted-foreground/60 uppercase tracking-[0.2em] ml-1">Password (API Key)</label>
             <input 
               name="password" 
               type="password" 
@@ -134,7 +134,7 @@ export default async function SettingsPage() {
           <button 
             type="submit" 
             disabled={!isOwner}
-            className="md:col-span-2 py-5 bg-foreground text-background rounded-2xl font-black uppercase text-xs tracking-[0.3em] hover:bg-primary hover:text-white transition-all active:scale-[0.99] disabled:bg-muted disabled:text-muted-foreground/30 disabled:cursor-not-allowed shadow-sm"
+            className="md:col-span-2 py-5 bg-foreground text-background rounded-2xl font-black uppercase text-sm tracking-[0.3em] hover:bg-primary hover:text-white transition-all active:scale-[0.99] disabled:bg-muted disabled:text-muted-foreground/30 disabled:cursor-not-allowed shadow-sm"
           >
             {isOwner ? 'Sync API Credentials' : 'Modification Restricted'}
           </button>
@@ -145,7 +145,7 @@ export default async function SettingsPage() {
       {isOwner && teamId.startsWith('team-') && (
         <div className="border border-red-500/10 rounded-3xl p-10 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="max-w-md text-center md:text-left">
-            <h2 className="text-red-500 font-black text-[10px] uppercase tracking-[0.2em] mb-2">Workspace Deletion</h2>
+            <h2 className="text-red-500 font-black text-xs uppercase tracking-[0.2em] mb-2">Workspace Deletion</h2>
             <p className="text-xs text-muted-foreground font-medium leading-relaxed">
               {members.length > 1 
                 ? "Restricted: You must remove all other members before deleting this workspace." 
@@ -155,7 +155,7 @@ export default async function SettingsPage() {
           <form action={deleteTeam}>
             <button 
               disabled={members.length > 1} 
-              className="px-10 py-4 border-2 border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all disabled:opacity-20"
+              className="px-10 py-4 border-2 border-red-500/20 text-red-500 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all disabled:opacity-20"
             >
               Terminate Workspace
             </button>

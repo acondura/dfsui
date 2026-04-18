@@ -41,13 +41,13 @@ export default function SearchableSelect({ label, options, value, onChange, plac
 
   return (
     <div className="space-y-2 relative" ref={containerRef}>
-      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block px-1">
+      <label className="text-xs font-black uppercase tracking-widest text-slate-500 block px-1">
         {label}
       </label>
       
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 focus:border-slate-900 dark:focus:border-slate-400 rounded-xl font-bold text-[11px] outline-none transition-all uppercase tracking-widest text-left"
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 focus:border-slate-900 dark:focus:border-slate-400 rounded-xl font-bold text-xs outline-none transition-all uppercase tracking-widest text-left"
       >
         <span className="truncate">
           {selectedOption ? selectedOption.label : 'Select...'}
@@ -80,7 +80,7 @@ export default function SearchableSelect({ label, options, value, onChange, plac
                     setIsOpen(false);
                     setSearch('');
                   }}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
                     value === opt.value 
                       ? 'bg-slate-900 text-white' 
                       : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
@@ -92,7 +92,7 @@ export default function SearchableSelect({ label, options, value, onChange, plac
               ))
             ) : (
               <div className="p-8 text-center opacity-40">
-                <p className="text-[10px] font-black uppercase tracking-widest">No results found</p>
+                <p className="text-xs font-black uppercase tracking-widest">No results found</p>
               </div>
             )}
           </div>

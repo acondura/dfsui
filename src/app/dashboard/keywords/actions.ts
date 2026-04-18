@@ -9,6 +9,15 @@ export interface KeywordItem {
   keyword_info?: {
     search_volume?: number;
     cpc?: number;
+    monthly_searches?: {
+      year: number;
+      month: number;
+      search_volume: number;
+    }[];
+  };
+  search_intent_info?: {
+    se_type?: string[];
+    main_intent?: string;
   };
 }
 
@@ -25,8 +34,10 @@ export async function fetchKeywords(
   const email = await getIdentity(env);
   const locCode = parseInt(location) || 2840;
   
-  // Use a new cache version for the expanded parameters
-  const kvKey = `keywords_v3:${email}:${apiType}:${engine}:${labsFunction}:${locCode}:${language.replace(/\s+/g, '_')}:${keyword.replace(/\s+/g, '_')}`;
+  // Normalize key for better cache hits (v4)
+  const normalizedKeyword = keyword.trim().toLowerCase().replace(/\s+/g, '_');
+  const normalizedLang = language.trim().toLowerCase().replace(/\s+/g, '_');
+  const kvKey = `keywords_v4:${email}:${apiType}:${engine}:${labsFunction}:${locCode}:${normalizedLang}:${normalizedKeyword}`;
 
   if (!bypassCache) {
     const cached = await env.dfsui.get(kvKey);
@@ -73,29 +84,31 @@ export async function fetchKeywords(
     // Normalize results format
     const results = rawItems.map((i: any) => {
       if (apiType === 'labs') {
+        const info = i.keyword_info || i.keyword_data?.keyword_info;
+        const intent = i.search_intent_info || i.keyword_data?.search_intent_info;
         return {
           keyword: i.keyword || i.keyword_data?.keyword || 'Unknown',
-          keyword_info: i.keyword_info || i.keyword_data?.keyword_info
+          keyword_info: info,
+          search_intent_info: intent
         };
       }
-      return i; // Keywords Data already has a similar flat structure or specific fields
+      return i; 
     });
 
-    if (results.length > 0) {
-      await env.dfsui.put(kvKey, JSON.stringify(results), { 
-        expirationTtl: 604800,
-        metadata: { 
-            timestamp: Date.now(),
-            keyword,
-            location: locCode.toString(),
-            apiType,
-            engine,
-            labsFunction,
-            language
-        }
-      });
-      console.log(`[KV Cache Miss] Saved keywords: ${keyword} (${apiType}/${engine})`);
-    }
+    // Save to KV (even if empty to prevent double charging)
+    await env.dfsui.put(kvKey, JSON.stringify(results), { 
+      expirationTtl: 604800,
+      metadata: { 
+          timestamp: Date.now(),
+          keyword,
+          location: locCode.toString(),
+          apiType,
+          engine,
+          labsFunction,
+          language
+      }
+    });
+    console.log(`[KV Cache Miss] Saved keywords: ${keyword} (${apiType}/${engine}) - ${results.length} items`);
 
     revalidatePath('/dashboard/keywords'); 
     return { results, cost: task?.cost || 0 };
@@ -190,6 +203,38 @@ export async function getApiMetadata(apiType: 'labs' | 'live') {
     } catch (_e) { return { locations: [], languages: [] }; }
   }
 }
+export async function getUiLanguages() {
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  const { dfsUser, dfsPass } = await getTeamContext(env);
+  if (!dfsUser || !dfsPass) return [{ label: 'ENGLISH', value: 'en' }];
+  
+  const auth = btoa(`${dfsUser}:${dfsPass}`);
+  const url = 'https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages';
+  
+  try {
+    const res = await fetch(url, { headers: { 'Authorization': `Basic ${auth}` } });
+    const data = await res.json() as any;
+    const results = data.tasks?.[0]?.result || [];
+    
+    const langMap = new Map();
+    // Default high-quality ones
+    langMap.set('English', 'en');
+    langMap.set('Hindi', 'hi');
+    langMap.set('Romanian', 'ro');
+
+    results.forEach((r: any) => {
+      r.available_languages?.forEach((l: any) => {
+        const code = l.language_code || l.language_name.toLowerCase().slice(0, 2);
+        langMap.set(l.language_name, code);
+      });
+    });
+    
+    return Array.from(langMap.entries()).map(([name, code]) => ({
+      label: name.toUpperCase(),
+      value: code
+    })).sort((a, b) => a.label.localeCompare(b.label));
+  } catch (_e) { return [{ label: 'ENGLISH', value: 'en' }]; }
+}
 
 export async function getSerpPrice() {
   const { env } = getRequestContext() as { env: CloudflareEnv };
@@ -239,20 +284,43 @@ export async function analyzeCompetition(keyword: string, locationCode: string, 
     });
 
     const data = await res.json() as any;
-    const items = data.tasks?.[0]?.result?.[0]?.items || [];
+    const rawItems = data.tasks?.[0]?.result?.[0]?.items || [];
+    const organicItems = rawItems.filter((i: any) => i.type === "organic" && i.url).slice(0, 10);
+    const words = keyword.toLowerCase().split(/\s+/).filter(w => w.length > 1);
 
-    const analysis = items
-      .filter((item: any) => item.type === "organic" && item.url)
-      .map((item: any) => {
-        const words = keyword.toLowerCase().split(/\s+/).filter(w => w.length > 1);
-        
+    const analysis = await Promise.all(organicItems.map(async (item: any) => {
+        let h1Content = '';
+        let h1Match = false;
+
+        try {
+            // Attempt to fetch the page with a short timeout to find H1
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+            
+            const pageRes = await fetch(item.url, { 
+                signal: controller.signal,
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
+            });
+            clearTimeout(id);
+            
+            if (pageRes.ok) {
+                const html = await pageRes.text();
+                // Simple regex to find H1 content (more reliable than full parser in edge)
+                const h1Regex = /<h1[^>]*>([\s\S]*?)<\/h1>/i;
+                const match = html.match(h1Regex);
+                if (match && match[1]) {
+                    h1Content = match[1].replace(/<[^>]*>?/gm, '').trim().toLowerCase();
+                    h1Match = words.every(word => h1Content.includes(word));
+                }
+            }
+        } catch (_e) {
+            // Fallback if fetch fails or times out
+            h1Match = false;
+        }
+
         const checkMatch = (text: string, isUrl = false) => {
           if (!text) return false;
           const target = text.toLowerCase();
-          if (isUrl) {
-            // For URLs, we also want to match if words are separated by hyphens or underscores
-            return words.every(word => target.includes(word));
-          }
           return words.every(word => target.includes(word));
         };
 
@@ -260,24 +328,24 @@ export async function analyzeCompetition(keyword: string, locationCode: string, 
           url: checkMatch(item.url, true),
           title: checkMatch(item.title),
           description: checkMatch(item.description),
-          h1: false 
+          h1: h1Match
         };
         
         let hostname = 'unknown';
         try { hostname = new URL(item.url).hostname; } catch (e) {}
         
-        // Calculate score based on metrics
         const score = Object.values(metrics).filter(Boolean).length * 25;
-        
         return { domain: hostname, url: item.url, score, metrics };
-      });
+    }));
 
     // 3. Save to KV for next time (expires in 7 days)
     if (analysis.length > 0) {
       await env.dfsui.put(kvKey, JSON.stringify(analysis), { expirationTtl: 604800 });
-      console.log(`[KV Cache Miss] Saved ${keyword}`);
     }
 
     return { analysis, cost: data.tasks?.[0]?.cost || 0, cached: false };
-  } catch (_e) { return { analysis: [], cost: 0, cached: false }; }
+  } catch (_e) { 
+    console.error("Audit error:", _e);
+    return { analysis: [], cost: 0, cached: false }; 
+  }
 }
