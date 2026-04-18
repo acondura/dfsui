@@ -14,7 +14,14 @@ export default function KeywordsPage() {
   const [activeLoc, setActiveLoc] = useState('2840');
   const [recentQueries, setRecentQueries] = useState<any[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
-  const [lastSearch, setLastSearch] = useState<{q: string, loc: string, mode: 'labs' | 'live'} | null>(null);
+  const [lastSearch, setLastSearch] = useState<{
+    q: string, 
+    loc: string, 
+    apiType: 'labs' | 'live', 
+    labsFunction: 'keyword_suggestions' | 'keyword_ideas', 
+    engine: string, 
+    language: string
+  } | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -33,13 +40,21 @@ export default function KeywordsPage() {
     return () => window.removeEventListener('reset-keywords', handleReset);
   }, []);
 
-  const handleSearch = async (q: string, loc: string, mode: 'labs' | 'live', bypassCache = false) => {
+  const handleSearch = async (
+    q: string, 
+    loc: string, 
+    apiType: 'labs' | 'live', 
+    labsFunction: 'keyword_suggestions' | 'keyword_ideas' = 'keyword_suggestions',
+    engine: string = 'google',
+    language: string = 'English',
+    bypassCache = false
+  ) => {
     setLoading(true);
     setError(null);
     setActiveLoc(loc);
-    setLastSearch({ q, loc, mode });
+    setLastSearch({ q, loc, apiType, labsFunction, engine, language });
     try {
-      const data = await fetchKeywords(q, loc, mode, bypassCache);
+      const data = await fetchKeywords(q, loc, apiType, labsFunction, engine, language, bypassCache);
       if (data.error) {
         setError(data.error);
         setResults([]);
@@ -56,7 +71,7 @@ export default function KeywordsPage() {
   };
 
   return (
-    <div className="space-y-12 pb-20 animate-in fade-in duration-700">
+    <div className="space-y-6 pb-20 animate-in fade-in duration-700">
       <div className="flex justify-between items-end">
         <h1 className="text-4xl font-black text-slate-900 dark:text-slate-300 tracking-tighter">Keyword Research</h1>
         {cost > 0 && (
@@ -93,7 +108,15 @@ export default function KeywordsPage() {
               </button>
 
               <button 
-                onClick={() => lastSearch && handleSearch(lastSearch.q, lastSearch.loc, lastSearch.mode, true)}
+                onClick={() => lastSearch && handleSearch(
+                    lastSearch.q, 
+                    lastSearch.loc, 
+                    lastSearch.apiType, 
+                    lastSearch.labsFunction, 
+                    lastSearch.engine, 
+                    lastSearch.language, 
+                    true
+                )}
                 className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:text-slate-500 dark:hover:text-white border-2 border-slate-200 dark:border-slate-800 hover:border-slate-900 dark:hover:border-slate-600 rounded-lg transition-all"
               >
                 <RefreshCcw size={14} /> Refresh from API
@@ -115,26 +138,32 @@ export default function KeywordsPage() {
                     <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Keyword</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Location</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Mode</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Source</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Engine</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                     {currentQueries.map((query, idx) => (
-                      <tr key={`${query.keyword}-${query.location}-${query.mode}-${idx}`} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                      <tr key={`${query.keyword}-${query.location}-${query.apiType}-${idx}`} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                         <td className="px-6 py-4">
                           <button 
-                            onClick={() => handleSearch(query.keyword, query.location, query.mode)}
+                            onClick={() => handleSearch(query.keyword, query.location, query.apiType, query.labsFunction, query.engine, query.language)}
                             className="font-bold text-slate-900 dark:text-slate-100 text-base lowercase hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-2"
                           >
                             {query.keyword}
                           </button>
                         </td>
                         <td className="px-6 py-4 font-mono text-xs uppercase text-slate-500">{query.location}</td>
-                        <td className="px-6 py-4 font-mono text-xs uppercase text-slate-500">{query.mode}</td>
+                        <td className="px-6 py-4">
+                            <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-tighter text-slate-500">
+                                {query.apiType} {query.labsFunction === 'keyword_ideas' ? '(Ideas)' : ''}
+                            </span>
+                        </td>
+                        <td className="px-6 py-4 font-mono text-xs uppercase text-slate-500">{query.engine} / {query.language}</td>
                         <td className="px-6 py-4 text-right">
                           <button 
-                            onClick={() => handleSearch(query.keyword, query.location, query.mode)}
+                            onClick={() => handleSearch(query.keyword, query.location, query.apiType, query.labsFunction, query.engine, query.language)}
                             className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-lg transition-colors inline-flex items-center gap-2"
                           >
                             Research <ChevronRight size={14} />

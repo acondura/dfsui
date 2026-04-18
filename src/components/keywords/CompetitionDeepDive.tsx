@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, ExternalLink } from 'lucide-react';
 
 interface Competitor {
   domain: string;
@@ -10,12 +10,12 @@ interface Competitor {
 }
 
 const MetricPoint = ({ label, isMet }: { label: string, isMet: boolean }) => (
-  <div className="flex flex-col items-center justify-center w-14 shrink-0">
-    <span className="text-[8px] font-black uppercase text-slate-400 mb-1 tracking-tighter">{label}</span>
+  <div className="flex flex-col items-center justify-center w-16 shrink-0">
+    <span className="text-[10px] font-black uppercase text-slate-300 mb-1 tracking-tighter">{label}</span>
     {isMet ? (
-      <Check size={14} className="text-emerald-500 stroke-[4]" />
+      <Check size={18} className="text-emerald-500 stroke-[4]" />
     ) : (
-      <X size={14} className="text-slate-200 dark:text-slate-800" />
+      <X size={18} className="text-slate-300 dark:text-slate-700" />
     )}
   </div>
 );
@@ -32,7 +32,7 @@ export default function CompetitionDeepDive({ data, keyword }: { data: Competito
           SERP Audit: {keyword}
         </div>
         <div className="flex items-center gap-4 text-right">
-          <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Average Optimization</span>
+          <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Average Optimization</span>
           <span className="text-2xl font-black font-mono text-slate-950 dark:text-white leading-none">{avgScore.toFixed(0)}%</span>
         </div>
       </div>
@@ -41,7 +41,7 @@ export default function CompetitionDeepDive({ data, keyword }: { data: Competito
         {data.map((item, i) => (
           <div key={item.url} className="flex items-center py-3 px-2 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
             {/* Position */}
-            <div className="w-10 shrink-0 text-[11px] font-black text-slate-300 font-mono italic">
+            <div className="w-10 shrink-0 text-[11px] font-black text-slate-400 font-mono italic">
               {String(i + 1).padStart(2, '0')}
             </div>
 
@@ -50,9 +50,15 @@ export default function CompetitionDeepDive({ data, keyword }: { data: Competito
               <div className="text-sm font-black text-slate-950 dark:text-slate-50 truncate uppercase tracking-tight leading-none mb-1">
                 {item.domain}
               </div>
-              <div className="text-[10px] font-mono text-slate-500 truncate lowercase opacity-60 leading-none">
-                {item.url}
-              </div>
+              <a 
+                href={item.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group/link flex items-center gap-1.5 text-[12px] font-mono text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 truncate lowercase leading-none"
+              >
+                <span className="truncate">{item.url}</span>
+                <ExternalLink size={12} className="shrink-0 opacity-40 group-hover/link:opacity-100 transition-opacity" />
+              </a>
             </div>
 
             {/* 4 Metrics */}

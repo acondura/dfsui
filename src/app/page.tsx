@@ -74,7 +74,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Edge Cached</h3>
               <p className="text-slate-600 leading-relaxed">
-                Powered by Cloudflare KV. Never pay for the same API query twice. We cache your historical data at the edge for instant retrieval and zero additional cost.
+                Powered by Cloudflare. Never pay for the same API query twice. We cache your historical data at the edge for instant retrieval and zero additional cost.
               </p>
             </div>
 
@@ -96,10 +96,69 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Extensible Open Source</h3>
               <p className="text-slate-600 leading-relaxed">
-                Fork it, modify it, host it yourself. DFS UI provides a clean Next.js 15 foundation to build exactly the SEO tools your agency or business needs.
+                Fork it, modify it, host it yourself. DFS UI provides a clean Next.js foundation to build exactly the SEO tools your agency or business needs.
               </p>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      {/* HOW IT WORKS */}
+      <section className="bg-slate-50 border-t border-slate-200 py-32">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <div className="text-center pb-6">
+            <h3 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight pb-6">How to Get Started</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative">
+            {/* Desktop Line */}
+            <div className="hidden md:block absolute top-[1.25rem] left-[10%] right-[10%] h-[2px] bg-slate-200" />
+            
+            {/* Step 1 */}
+            <div className="relative flex flex-col items-center text-center group">
+              <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm mb-4 relative z-10 shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
+                1
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">Access DFS UI</h4>
+              <p className="text-base text-slate-500 leading-relaxed">
+                Sign in securely to your workspace at <span className="text-blue-600 font-semibold">dfsui.com</span>. Magic link sent to email, no password needed.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="relative flex flex-col items-center text-center group">
+              <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm mb-4 relative z-10 shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
+                2
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">Get API Keys</h4>
+              <p className="text-base text-slate-500 leading-relaxed">
+                Create an account at <span className="text-blue-600 font-semibold">DataForSEO.com</span>.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="relative flex flex-col items-center text-center group">
+              <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm mb-4 relative z-10 shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
+                3
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">Connect Account</h4>
+              <p className="text-base text-slate-500 leading-relaxed">
+                Input your credentials in the dashboard settings.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="relative flex flex-col items-center text-center group">
+              <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm mb-4 relative z-10 shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
+                4
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">Scale Research</h4>
+              <p className="text-base text-slate-500 leading-relaxed">
+                Start running professional keyword research instantly.
+              </p>
+            </div>
           </div>
         </div>
       </section>

@@ -42,3 +42,6 @@ next-env.d.ts
 .wrangler
 src/.next
 wrangler.toml
+src/app/page.tsx
+
+/plan

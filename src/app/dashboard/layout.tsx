@@ -18,7 +18,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       });
       if (res.ok) {
         const data = await res.json() as DFUserResponse;
-        balance = (data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0).toFixed(2);
+        const rawBalance = data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0;
+        // Truncate to 2 decimals instead of rounding
+        balance = (Math.floor(rawBalance * 100) / 100).toFixed(2);
       }
     } catch (_e) {}
   }
@@ -28,9 +30,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <Sidebar allTeams={allTeams} activeTeamId={activeTeam.id} />
       
       <div className="flex-1 bg-zinc-50 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 border-b border-border flex items-center justify-between px-8 backdrop-blur-md z-10">
+        <header className="h-16 border-b border-border flex items-center justify-between pl-16 pr-4 lg:px-8 backdrop-blur-md z-10">
           <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Balance</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hidden xs:block">Balance</span>
             <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 font-mono font-bold text-sm">
               ${balance}
             </div>
