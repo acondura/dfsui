@@ -360,7 +360,15 @@ export async function togglePseoPublish(keyword: string, analysisData?: any) {
 
   const kvKey = 'pseo:published';
   const raw = await env.dfsui.get(kvKey);
-  let published: string[] = raw ? JSON.parse(raw) : [];
+  let published: string[] = [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      published = Array.isArray(parsed) ? parsed : [String(parsed)];
+    } catch {
+      published = [raw];
+    }
+  }
 
   const slug = keyword.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   const publicDataKey = `pseo:analysis:${slug}`;
@@ -393,7 +401,13 @@ export async function getPublishedKeywords() {
   const { env } = getRequestContext() as { env: CloudflareEnv };
   const kvKey = 'pseo:published';
   const raw = await env.dfsui.get(kvKey);
-  return raw ? (JSON.parse(raw) as string[]) : [];
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [String(parsed)];
+  } catch {
+    return [raw];
+  }
 }
 
 /**

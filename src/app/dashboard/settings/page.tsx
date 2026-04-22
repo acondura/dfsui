@@ -126,7 +126,7 @@ export default async function SettingsPage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground font-medium mb-4">
-                Administrators can manage pSEO keywords, switch teams, and control global system settings. Be careful who you authorize.
+                Administrators can manage programmatic SEO keywords. Be careful who you authorize.
               </p>
               <form action={async (formData) => { 'use server'; await addAdmin(formData.get('newAdmin') as string); }} className="flex gap-2">
                 <input 

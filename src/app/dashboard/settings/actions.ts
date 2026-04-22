@@ -136,7 +136,15 @@ export async function addAdmin(adminEmail: string) {
 
   const targetEmail = adminEmail.toLowerCase().trim();
   const raw = await env.dfsui.get('app:admin');
-  const admins: string[] = raw ? JSON.parse(raw) : [];
+  let admins: string[] = [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      admins = Array.isArray(parsed) ? parsed : [String(parsed)];
+    } catch {
+      admins = [raw];
+    }
+  }
   
   if (!admins.includes(targetEmail)) {
     admins.push(targetEmail);
@@ -153,7 +161,15 @@ export async function removeAdmin(adminEmail: string) {
   if (!isAdmin || email === adminEmail) throw new Error("Unauthorized or self-removal blocked");
 
   const raw = await env.dfsui.get('app:admin');
-  let admins: string[] = raw ? JSON.parse(raw) : [];
+  let admins: string[] = [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      admins = Array.isArray(parsed) ? parsed : [String(parsed)];
+    } catch {
+      admins = [raw];
+    }
+  }
   
   admins = admins.filter(e => e !== adminEmail);
   await env.dfsui.put('app:admin', JSON.stringify(admins));
@@ -166,5 +182,13 @@ export async function getAdminList() {
   if (!isAdmin) return [];
 
   const raw = await env.dfsui.get('app:admin');
-  return raw ? (JSON.parse(raw) as string[]) : [];
+  if (!raw) return [];
+  
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [String(parsed)];
+  } catch {
+    // Legacy support: if it's a plain string like "admin@example.com"
+    return [raw];
+  }
 }

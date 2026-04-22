@@ -110,6 +110,7 @@ async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string 
 }
 
 export async function getIdentity(env: CloudflareEnv): Promise<string> {
+  // 1. Development Bypass
   if (process.env.NODE_ENV === 'development') {
     return 'admin@example.com'; 
   }
@@ -117,18 +118,19 @@ export async function getIdentity(env: CloudflareEnv): Promise<string> {
   const headersList = await headers();
   const jwt = headersList.get('cf-access-jwt-assertion');
 
+  // 2. Strict JWT Verification
   if (jwt) {
     const verifiedEmail = await verifyAccessJwt(jwt, env);
     if (verifiedEmail) return verifiedEmail;
+    
+    // If JWT exists but is invalid, we FAIL CLOSED for security
+    console.error("Security Alert: A JWT was provided but failed verification.");
+    throw new Error("Unauthorized: Invalid security token.");
   }
 
-  const headerEmail = headersList.get('cf-access-authenticated-user-email') || 
-                      headersList.get('Cf-Access-Authenticated-User-Email');
-  
-  const validated = emailSchema.safeParse(headerEmail);
-  if (validated.success) return validated.data;
-
-  throw new Error("Unauthorized: Identity could not be verified.");
+  // 3. Fail Closed (Removed insecure header fallback)
+  console.error("Security Alert: Access attempt without Cloudflare JWT assertion.");
+  throw new Error("Unauthorized: Cloudflare Access JWT is required.");
 }
 
 export async function getTeamContext(env: CloudflareEnv) {
@@ -186,7 +188,7 @@ export async function getTeamContext(env: CloudflareEnv) {
   if (adminRaw) {
     try {
       const parsed = JSON.parse(adminRaw);
-      adminEmails = Array.isArray(parsed) ? parsed : [adminRaw];
+      adminEmails = Array.isArray(parsed) ? parsed : [String(parsed)];
     } catch {
       // Legacy support: if it's a plain string like "admin@example.com"
       adminEmails = [adminRaw];
