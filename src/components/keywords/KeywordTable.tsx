@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { BarChart3, Loader2, ArrowUpRight, CheckSquare, Square, RefreshCcw, ArrowDown, ArrowUp, Zap, Check, Search, X, Globe } from 'lucide-react';
+import { Loader2, ArrowUpRight, CheckSquare, Square, RefreshCcw, ArrowDown, ArrowUp, Zap, Check, Search, X, Globe } from 'lucide-react';
 import { analyzeCompetition, KeywordItem, getSerpPrice, togglePseoPublish } from '@/app/dashboard/keywords/actions';
 import CompetitionDeepDive from '@/components/keywords/CompetitionDeepDive';
 

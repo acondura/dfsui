@@ -86,11 +86,11 @@ export default function CompetitionDeepDive({ data, keyword, volume }: { data: C
                 </div>
                 <div>
                   <p className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                    Attack the "{mainWeakness.label}" Gap
+                    Attack the &quot;{mainWeakness.label}&quot; Gap
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                     {mainWeakness.count} out of {totalCompetitors} competitors are failing to optimize their **{mainWeakness.label}**. 
-                    By simply including "{keyword}" in your {mainWeakness.label}, you instantly gain a technical edge over {((mainWeakness.count/totalCompetitors)*100).toFixed(0)}% of the SERP.
+                    By simply including &quot;{keyword}&quot; in your {mainWeakness.label}, you instantly gain a technical edge over {((mainWeakness.count/totalCompetitors)*100).toFixed(0)}% of the SERP.
                   </p>
                 </div>
               </div>

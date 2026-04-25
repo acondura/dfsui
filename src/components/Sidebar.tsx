@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Search, Globe, Settings, LogOut, ChevronDown, Check, ShieldAlert, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Search, Settings, LogOut, ChevronDown, Check, Menu, X } from 'lucide-react';
 import { switchTeam } from '@/app/dashboard/settings/actions';
 import { Team } from '@/lib/auth';
 
@@ -34,8 +34,10 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
 
   // Close mobile menu on path change
   useEffect(() => {
-    setIsMobileOpen(false);
-  }, [pathname]);
+    if (isMobileOpen) {
+      Promise.resolve().then(() => setIsMobileOpen(false));
+    }
+  }, [pathname, isMobileOpen]);
 
   return (
     <>

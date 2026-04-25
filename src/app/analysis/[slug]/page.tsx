@@ -1,5 +1,5 @@
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { CloudflareEnv } from '@/lib/auth';
+import { CloudflareEnv } from '@/lib/auth'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { notFound } from 'next/navigation';
 import CompetitionDeepDive from '@/components/keywords/CompetitionDeepDive';
 import { Globe, ShieldCheck, Activity, BarChart3, Info } from 'lucide-react';
@@ -54,7 +54,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ slug:
                 {keyword}
               </h1>
               <p className="text-xl text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                A comprehensive data-driven breakdown of the search landscape for <span className="text-slate-900 dark:text-slate-200 font-bold underline decoration-primary/30">"{keyword}"</span>. Generated on {date}.
+                A comprehensive data-driven breakdown of the search landscape for <span className="text-slate-900 dark:text-slate-200 font-bold underline decoration-primary/30">&quot;{keyword}&quot;</span>. Generated on {date}.
               </p>
             </div>
             

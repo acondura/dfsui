@@ -74,7 +74,7 @@ export default function KeywordsPage() {
         setCost(data.cost);
         fetchRecentQueries().then(res => setRecentQueries(res));
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred.");
     } finally {
       setLoading(false);
@@ -148,7 +148,7 @@ export default function KeywordsPage() {
             <div>
               <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{t('no_results_found')}</h3>
               <p className="text-slate-500 font-bold max-w-sm mt-2">
-                The {lastSearch.apiType === 'labs' ? 'Labs' : 'Live'} database doesn't have data for <span className="text-slate-900 dark:text-slate-200">"{lastSearch.q}"</span> in this location/language.
+                The {lastSearch.apiType === 'labs' ? 'Labs' : 'Live'} database doesn&apos;t have data for <span className="text-slate-900 dark:text-slate-200">&quot;{lastSearch.q}&quot;</span> in this location/language.
               </p>
             </div>
             

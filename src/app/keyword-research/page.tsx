@@ -82,7 +82,7 @@ export default function KeywordResearchLanding() {
                 <Zap size={14} className="fill-current" /> Next-Gen Keyword Research
               </div>
               <h1 className="text-5xl lg:text-7xl font-black text-slate-900 dark:text-white leading-[1.1] tracking-tight mb-8">
-                Don't just research keywords. <br />
+                Don&apos;t just research keywords. <br />
                 <span className="text-primary">Own the SERP.</span>
               </h1>
               <p className="text-xl text-slate-500 dark:text-slate-400 mb-10 max-w-2xl leading-relaxed font-medium">
@@ -127,7 +127,7 @@ export default function KeywordResearchLanding() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-6">How It Works</h2>
-            <p className="text-lg text-slate-500 font-medium">We've distilled years of SEO consulting expertise into a 4-step automated workflow.</p>
+            <p className="text-lg text-slate-500 font-medium">We&apos;ve distilled years of SEO consulting expertise into a 4-step automated workflow.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -155,9 +155,9 @@ export default function KeywordResearchLanding() {
           <div className="flex flex-col lg:flex-row gap-20">
             <div className="lg:w-1/3">
               <div className="sticky top-32">
-                <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-8 leading-tight">Why the World's Best SEOs Choose <span className="text-primary">DFSUI.</span></h2>
+                <h2 className="text-4xl font-black text-slate-900 dark:text-white mb-8 leading-tight">Why the World&apos;s Best SEOs Choose <span className="text-primary">DFSUI.</span></h2>
                 <p className="text-lg text-slate-500 font-medium mb-10 leading-relaxed">
-                  We didn't build just another keyword tool. We built a competitive intelligence platform that empowers you to win.
+                  We didn&apos;t build just another keyword tool. We built a competitive intelligence platform that empowers you to win.
                 </p>
                 <Link 
                   href="/dashboard" 

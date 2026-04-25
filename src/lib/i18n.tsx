@@ -220,14 +220,14 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('ui-lang');
-    if (saved) {
-      setLang(saved);
+    if (saved && saved !== lang) {
+      Promise.resolve().then(() => setLang(saved));
     }
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     if (lang === 'en' || lang === 'hi' || lang === 'ro') {
-      setDynamicDict({});
+      Promise.resolve().then(() => setDynamicDict({}));
       return;
     }
 

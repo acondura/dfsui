@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Globe, Coins, Check } from 'lucide-react';
+import { Search } from 'lucide-react';
 import InfoTooltip from '@/components/ui/InfoTooltip';
 import { getApiMetadata } from '@/app/dashboard/keywords/actions';
 import SearchableSelect from '@/components/ui/SearchableSelect';
@@ -38,11 +38,13 @@ export default function SearchForm({ onSearch, initialLocation = '2840' }: any) 
     if (saved) {
       try {
         const params = JSON.parse(saved);
-        if (params.apiType) setApiType(params.apiType);
-        if (params.engine) setEngine(params.engine);
-        if (params.language) setLanguage(params.language);
-        if (params.location) setLocation(params.location);
-        if (params.labsFunction) setLabsFunction(params.labsFunction);
+        Promise.resolve().then(() => {
+          if (params.apiType) setApiType(params.apiType);
+          if (params.engine) setEngine(params.engine);
+          if (params.language) setLanguage(params.language);
+          if (params.location) setLocation(params.location);
+          if (params.labsFunction) setLabsFunction(params.labsFunction);
+        });
       } catch (e) {}
     }
   }, []);

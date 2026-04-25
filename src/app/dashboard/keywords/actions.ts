@@ -112,7 +112,7 @@ export async function fetchKeywords(
 
     revalidatePath('/dashboard/keywords'); 
     return { results, cost: task?.cost || 0 };
-  } catch (_e) { return { results: [], cost: 0, error: "API Connection Failed" }; }
+  } catch { return { results: [], cost: 0, error: "API Connection Failed" }; }
 }
 
 export async function fetchRecentQueries() {
@@ -138,7 +138,7 @@ export async function fetchRecentQueries() {
     
     // Sort by timestamp descending
     return queries.sort((a, b) => b.timestamp - a.timestamp);
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -247,7 +247,7 @@ export async function getSerpPrice() {
     const data = await res.json() as any;
     const price = data.tasks?.[0]?.result?.[0]?.price?.serp?.google?.organic?.live?.priority_normal?.cost || 0.05;
     return price;
-  } catch (e) { return 0.05; }
+  } catch { return 0.05; }
 }
 
 /**
@@ -313,26 +313,26 @@ export async function analyzeCompetition(keyword: string, locationCode: string, 
                     h1Match = words.every(word => h1Content.includes(word));
                 }
             }
-        } catch (_e) {
+        } catch {
             // Fallback if fetch fails or times out
             h1Match = false;
         }
 
-        const checkMatch = (text: string, isUrl = false) => {
+        const checkMatch = (text: string) => {
           if (!text) return false;
           const target = text.toLowerCase();
           return words.every(word => target.includes(word));
         };
 
         const metrics = {
-          url: checkMatch(item.url, true),
+          url: checkMatch(item.url),
           title: checkMatch(item.title),
           description: checkMatch(item.description),
           h1: h1Match
         };
         
         let hostname = 'unknown';
-        try { hostname = new URL(item.url).hostname; } catch (e) {}
+        try { hostname = new URL(item.url).hostname; } catch {}
         
         const score = Object.values(metrics).filter(Boolean).length * 25;
         return { domain: hostname, url: item.url, score, metrics };
@@ -344,8 +344,7 @@ export async function analyzeCompetition(keyword: string, locationCode: string, 
     }
 
     return { analysis, cost: data.tasks?.[0]?.cost || 0, cached: false };
-  } catch (_e) { 
-    console.error("Audit error:", _e);
+  } catch { 
     return { analysis: [], cost: 0, cached: false }; 
   }
 }
