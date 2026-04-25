@@ -120,7 +120,7 @@ export async function fetchRecentQueries() {
   const email = await getIdentity(env);
   
   try {
-    const list = await env.dfsui.list({ prefix: `keywords_v3:${email}:` });
+    const list = await env.dfsui.list({ prefix: `keywords_v4:${email}:` });
     const queries = list.keys.map(key => {
       const parts = key.name.split(':');
       const meta = key.metadata as any;
