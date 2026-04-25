@@ -37,7 +37,7 @@ export async function fetchKeywords(
   // Normalize key for better cache hits (v4)
   const normalizedKeyword = keyword.trim().toLowerCase().replace(/\s+/g, '_');
   const normalizedLang = language.trim().toLowerCase().replace(/\s+/g, '_');
-  const kvKey = `keywords_v4:${email}:${apiType}:${engine}:${labsFunction}:${locCode}:${normalizedLang}:${normalizedKeyword}`;
+  const kvKey = `keywords:${email}:${apiType}:${engine}:${labsFunction}:${locCode}:${normalizedLang}:${normalizedKeyword}`;
 
   if (!bypassCache) {
     const cached = await env.dfsui.get(kvKey);
@@ -120,7 +120,7 @@ export async function fetchRecentQueries() {
   const email = await getIdentity(env);
   
   try {
-    const list = await env.dfsui.list({ prefix: `keywords_v4:${email}:` });
+    const list = await env.dfsui.list({ prefix: `keywords:${email}:` });
     const queries = list.keys.map(key => {
       const parts = key.name.split(':');
       const meta = key.metadata as any;
