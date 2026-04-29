@@ -153,7 +153,15 @@ export default function CompetitionDeepDive({ data, keyword, volume }: { data: C
                 rel="noopener noreferrer"
                 className="group/link flex items-center gap-1.5 text-sm font-mono text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 truncate lowercase leading-none"
               >
-                <span className="truncate">{item.url}</span>
+                {item.url.length > 80 ? (
+                  <InfoTooltip content={item.url} className="w-96">
+                    <span className="truncate">
+                      {item.url.substring(0, 77)}...
+                    </span>
+                  </InfoTooltip>
+                ) : (
+                  <span className="truncate">{item.url}</span>
+                )}
                 <ExternalLink size={12} className="shrink-0 opacity-40 group-hover/link:opacity-100 transition-opacity" />
               </a>
             </div>
