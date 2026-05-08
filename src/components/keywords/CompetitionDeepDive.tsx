@@ -20,7 +20,7 @@ const MetricPoint = ({ label, isMet, tooltip, link }: { label: string, isMet: bo
       ) : (
         <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">{label}</span>
       )}
-      <InfoTooltip content={tooltip} size={10} />
+      <InfoTooltip content={link ? `${tooltip} Click to see docs` : tooltip} size={10} />
     </div>
     {isMet ? (
       <Check size={18} className="text-primary stroke-[4]" />
