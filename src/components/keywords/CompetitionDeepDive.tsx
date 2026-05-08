@@ -10,10 +10,16 @@ interface Competitor {
   metrics: { url: boolean; title: boolean; description: boolean; h1: boolean; };
 }
 
-const MetricPoint = ({ label, isMet, tooltip }: { label: string, isMet: boolean, tooltip: string }) => (
+const MetricPoint = ({ label, isMet, tooltip, link }: { label: string, isMet: boolean, tooltip: string, link?: string }) => (
   <div className="flex flex-col items-center justify-center w-16 shrink-0 group">
     <div className="flex items-center gap-1 mb-1">
-      <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">{label}</span>
+      {link ? (
+        <a href={link} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors tracking-tighter">
+          {label}
+        </a>
+      ) : (
+        <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">{label}</span>
+      )}
       <InfoTooltip content={tooltip} size={10} />
     </div>
     {isMet ? (
@@ -172,21 +178,25 @@ export default function CompetitionDeepDive({ data, keyword, volume }: { data: C
                 label="URL" 
                 isMet={item.metrics.url} 
                 tooltip="Checks if the target keyword is present in the page URL slug."
+                link="https://diggitymarketing.com/on-page-seo-checklist/#URL_Optimization"
               />
               <MetricPoint 
                 label="TITLE" 
                 isMet={item.metrics.title} 
                 tooltip="Checks if the target keyword is present in the browser tab title (Meta Title)."
+                link="https://diggitymarketing.com/on-page-seo-checklist/#Page_Title_Optimization"
               />
               <MetricPoint 
                 label="META" 
                 isMet={item.metrics.description} 
                 tooltip="Checks if the target keyword is present in the meta description snippet."
+                link="https://diggitymarketing.com/on-page-seo-checklist/#Meta_Description_Optimization"
               />
               <MetricPoint 
                 label="H1" 
                 isMet={item.metrics.h1} 
                 tooltip="Checks if the target keyword is present in the primary H1 heading tag."
+                link="https://diggitymarketing.com/on-page-seo-checklist/#Heading_Optimization"
               />
             </div>
 
