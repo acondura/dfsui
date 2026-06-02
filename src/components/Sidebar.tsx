@@ -2,125 +2,139 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Search, 
-  Globe, 
-  Settings, 
-  LogOut, 
-  ChevronDown,
-  Check
-} from 'lucide-react';
+import { LayoutDashboard, Search, Settings, LogOut, ChevronDown, Check, Menu, X } from 'lucide-react';
 import { switchTeam } from '@/app/dashboard/settings/actions';
 import { Team } from '@/lib/auth';
 
+import { useI18n } from '@/lib/i18n';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
+
 export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Team[], activeTeamId?: string }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const activeTeam = allTeams.find(t => t.id === activeTeamId) || allTeams[0];
   const teamDomain = process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN || 'k9czuj5q2zbo29nb';
   const logoutUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/logout?returnTo=${encodeURIComponent('https://dfsui.com')}`;
 
-  const handleTeamSwitch = async (id: string) => {
-    setIsOpen(false);
-    await switchTeam(id);
+  const menuItems = [
+    { name: t('dashboard'), href: '/dashboard', icon: LayoutDashboard },
+    { name: t('keywords'), href: '/dashboard/keywords', icon: Search },
+    { name: t('settings'), href: '/dashboard/settings', icon: Settings },
+  ];
+
+  // Helper to translate team names
+  const translateTeamName = (name: string) => {
+    if (name === 'Personal Workspace') return t('personal');
+    return name;
   };
 
+  // Close mobile menu on path change
+  useEffect(() => {
+    if (isMobileOpen) {
+      Promise.resolve().then(() => setIsMobileOpen(false));
+    }
+  }, [pathname, isMobileOpen]);
+
   return (
-    <aside className="w-72 bg-slate-900 text-slate-300 flex flex-col shrink-0 select-none border-r border-slate-800 z-50">
-      <div className="p-8">
-        <h1 className="text-white text-xl font-black tracking-tighter flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-xs font-black shadow-lg shadow-blue-500/20">DF</div>
-          dfsui<span className="text-blue-500">.com</span>
-        </h1>
-      </div>
-
-      {/* Custom Workspace Switcher */}
-      <div className="px-6 mb-10 relative" ref={dropdownRef}>
-        <label className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] ml-1 mb-2.5 block">
-          Active Workspace
-        </label>
-        
+    <>
+      {/* Mobile Burger Button */}
+      {!isMobileOpen && (
         <button 
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-full flex items-center justify-between bg-slate-800/50 border rounded-2xl px-5 py-4 text-xs font-black text-white transition-all duration-300 ${
-            isOpen ? 'border-blue-500 bg-slate-800' : 'border-slate-700/50 hover:border-slate-600'
-          }`}
+          onClick={() => setIsMobileOpen(true)}
+          className="lg:hidden fixed top-3 left-4 z-40 p-2 bg-white dark:bg-zinc-900 border border-border rounded-xl shadow-lg text-zinc-600 dark:text-zinc-400"
         >
-          <span className="truncate">{activeTeam?.name}</span>
-          <ChevronDown size={14} strokeWidth={3} className={`transition-transform duration-300 ${isOpen ? 'rotate-180 text-blue-400' : 'text-slate-500'}`} />
+          <Menu size={20} />
         </button>
+      )}
 
-        {/* The Dropdown Menu - Positioned absolutely below the button */}
-        {isOpen && (
-          <div className="absolute left-6 right-6 mt-2 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl z-[60] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top">
-            <div className="py-2 max-h-60 overflow-y-auto custom-scrollbar">
-              {allTeams.map((team) => (
-                <button
-                  key={team.id}
-                  onClick={() => handleTeamSwitch(team.id)}
-                  className={`w-full flex items-center justify-between px-5 py-3 text-[11px] font-bold transition-colors ${
-                    team.id === activeTeamId 
-                      ? 'bg-blue-600/10 text-blue-400' 
-                      : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
-                  }`}
-                >
-                  <span className="truncate">{team.name}</span>
-                  {team.id === activeTeamId && <Check size={12} strokeWidth={3} />}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Backdrop */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-300"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
 
-      <nav className="flex-1 px-4 space-y-1.5">
-        {[
-          { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-          { name: 'Keywords', href: '/dashboard/keywords', icon: Search },
-          { name: 'SERP Checker', href: '/dashboard/serp', icon: Globe },
-          { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-        ].map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`group flex items-center gap-3 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                isActive 
-                  ? 'bg-blue-600 text-white shadow-xl shadow-blue-900/40' 
-                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-              }`}
+      <aside className={`
+        fixed inset-y-0 left-0 w-64 bg-zinc-50 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-50 flex flex-col shrink-0 border-r border-border z-50
+        transition-transform duration-300 lg:translate-x-0 lg:static
+        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-6 flex items-center justify-between">
+          <Link href="/" className="group">
+            <h1 className="text-xl tracking-tighter flex items-center gap-2 font-black group-hover:text-primary transition-colors">
+              DFSUI
+            </h1>
+          </Link>
+          <button 
+            onClick={() => setIsMobileOpen(false)}
+            className="lg:hidden p-1 hover:bg-muted rounded-lg transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="flex-1 px-4 space-y-1">
+          {menuItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-bold transition-all ${
+                  isActive 
+                    ? 'bg-primary text-white shadow-md shadow-primary/20' 
+                    : 'hover:bg-muted'
+                }`}
+              >
+                <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="p-4 border-t border-border">
+          <LanguageSwitcher />
+
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              onClick={() => setIsOpen(!isOpen)}
+              suppressHydrationWarning
+              className="w-full flex items-center justify-between p-3 border border-border rounded-xl hover:border-primary/50 transition-all"
             >
-              <item.icon size={16} className={isActive ? 'text-white' : 'text-slate-600 group-hover:text-slate-400'} />
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
+              <span className="text-sm font-black truncate uppercase tracking-widest">{translateTeamName(activeTeam?.name || '')}</span>
+              <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {isOpen && (
+              <div className="absolute bottom-full left-0 w-full mb-2 border border-border rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 bg-white dark:bg-zinc-900">
+                {allTeams.map(team => (
+                  <button
+                    key={team.id}
+                    onClick={() => switchTeam(team.id)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold hover:bg-muted text-left"
+                  >
+                    {translateTeamName(team.name)}
+                    {team.id === activeTeamId && <Check size={14} className="text-primary" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-      <div className="p-4 mt-auto border-t border-slate-800/50">
-        <a
-          href={logoutUrl}
-          className="flex items-center justify-center w-full px-4 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-2xl transition-all border border-transparent hover:border-red-500/20"
-        >
-          <LogOut size={14} className="mr-3" />
-          Log Out
-        </a>
-      </div>
-    </aside>
+          <a 
+            href={logoutUrl}
+            className="mt-4 flex items-center gap-3 px-4 py-3 text-sm font-black hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
+          >
+            <LogOut size={16} /> {t('sign_out')}
+          </a>
+        </div>
+      </aside>
+    </>
   );
 }

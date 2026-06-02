@@ -1,4 +1,4 @@
-# CLAUDE.md - Project Context: dfsui
+# GEMINI.md - Project Context: dfsui
 
 ## Project Overview
 **dfsui** (DataForSEO UI) is a high-performance SEO research platform built with **Next.js 15 (App Router)** and designed specifically for the **Cloudflare Workers/Pages** runtime. It provides a modern interface for interacting with DataForSEO APIs, focusing on keyword research and competitive analysis while optimizing for cost and speed through aggressive caching.

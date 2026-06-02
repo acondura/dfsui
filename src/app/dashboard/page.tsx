@@ -1,4 +1,3 @@
-// src/app/dashboard/page.tsx
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { getTeamContext, CloudflareEnv, DFUserResponse } from '@/lib/auth';
 
@@ -9,7 +8,6 @@ export default async function DashboardPage() {
   const { email, dfsUser, dfsPass, isConnected } = await getTeamContext(env);
 
   let balance = "---";
-
   if (isConnected && dfsUser && dfsPass) {
     try {
       const auth = btoa(`${dfsUser}:${dfsPass}`);
@@ -19,42 +17,38 @@ export default async function DashboardPage() {
       });
       const data = await res.json() as DFUserResponse;
       balance = (data.tasks?.[0]?.result?.[0]?.money?.balance ?? 0).toFixed(2);
-    } catch (e) {
-      console.error("Dashboard fetch error");
-    }
+    } catch (_e) {}
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-12">
-      <div className="bg-white border border-slate-200 rounded-[3rem] p-10 lg:p-14 shadow-sm relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full -mr-32 -mt-32 blur-3xl" />
-        <div className="relative z-10">
-          <h1 className="text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
-            Welcome back,<br /> 
-            <span className="text-blue-600 uppercase text-4xl">{email.split('@')[0]}</span>
-          </h1>
-          <div className="mt-12 p-8 bg-[#f8fafc] rounded-[2.5rem] border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Account Resources</p>
-              <h3 className="text-slate-600 font-bold text-lg">Available DataForSEO Credits</h3>
-            </div>
-            <div className="text-4xl font-mono font-bold text-slate-900 bg-white px-8 py-5 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50">
-              <span className="text-emerald-500 mr-1">$</span>{balance}
-            </div>
+    <div className="space-y-10 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <h1 className="text-4xl font-black tracking-tighter leading-tight">
+          Welcome back,<br /> 
+          <span className="text-primary uppercase text-3xl tracking-tight">{email.split('@')[0]}</span>
+        </h1>
+
+        <div className="border border-border p-6 rounded-xl shadow-sm flex items-center gap-6 min-w-[280px]">
+          <div className="flex-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Available Credits</p>
+            <h3 className="font-bold text-sm mt-0.5">DataForSEO Balance</h3>
+          </div>
+          <div className="text-2xl font-mono font-bold tracking-tighter">
+            <span className="text-primary mr-1">$</span>{balance}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {['Keywords', 'SERP', 'Explorer'].map((item) => (
-          <div key={item} className="bg-white border border-slate-100 p-8 rounded-[2rem] shadow-sm hover:border-slate-300 transition-all group">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">{item} Usage</p>
+          <div key={item} className="border border-border p-6 rounded-xl shadow-sm hover:border-primary/40 transition-all group">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">{item}</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-slate-900">0.00</span>
-              <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase italic group-hover:text-blue-500">credits</span>
+              <span className="text-2xl font-black tracking-tighter">0.00</span>
+              <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">credits</span>
             </div>
-            <div className="mt-4 h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-              <div className="h-full bg-slate-200 w-0" />
+            <div className="mt-4 h-1 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary/20 w-0 group-hover:w-full transition-all duration-700" />
             </div>
           </div>
         ))}

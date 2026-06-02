@@ -2,25 +2,51 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1c1e;
+  --primary: 5, 150, 105;
+  --muted: #f4f5f7;
+  --muted-foreground: #64748b;
+  --border: #eef0f2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #111214;
+    --foreground: #f4f5f7;
+    --muted: #1e2023;
+    --muted-foreground: #94a3b8;
+    --border: #2a2c2f;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: rgb(var(--primary));
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@media print {
+  .no-print {
+    display: none !important;
   }
-}
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Eliminăm culorile de fundal ale rândurilor selectate pentru claritate pe hârție */
+  tr {
+    background: transparent !important;
+    page-break-inside: avoid;
+  }
+
+  /* Forțăm coloanele de date să fie vizibile */
+  .text-primary {
+    color: rgb(5, 150, 105) !important;
+    -webkit-print-color-adjust: exact;
+  }
 }

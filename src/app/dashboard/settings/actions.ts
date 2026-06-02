@@ -126,3 +126,69 @@ export async function updateSettings(formData: FormData) {
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/settings');
 }
+/**
+ * Manage Global Administrators
+ */
+export async function addAdmin(adminEmail: string) {
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  const { isAdmin } = await getTeamContext(env);
+  if (!isAdmin) throw new Error("Unauthorized");
+
+  const targetEmail = adminEmail.toLowerCase().trim();
+  const raw = await env.dfsui.get('app:admin');
+  let admins: string[] = [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      admins = Array.isArray(parsed) ? parsed : [String(parsed)];
+    } catch {
+      admins = [raw];
+    }
+  }
+  
+  if (!admins.includes(targetEmail)) {
+    admins.push(targetEmail);
+    await env.dfsui.put('app:admin', JSON.stringify(admins));
+  }
+  revalidatePath('/dashboard/settings');
+}
+
+export async function removeAdmin(adminEmail: string) {
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  const { isAdmin, email } = await getTeamContext(env);
+  
+  // Prevent removing yourself to avoid total lockout
+  if (!isAdmin || email === adminEmail) throw new Error("Unauthorized or self-removal blocked");
+
+  const raw = await env.dfsui.get('app:admin');
+  let admins: string[] = [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      admins = Array.isArray(parsed) ? parsed : [String(parsed)];
+    } catch {
+      admins = [raw];
+    }
+  }
+  
+  admins = admins.filter(e => e !== adminEmail);
+  await env.dfsui.put('app:admin', JSON.stringify(admins));
+  revalidatePath('/dashboard/settings');
+}
+
+export async function getAdminList() {
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  const { isAdmin } = await getTeamContext(env);
+  if (!isAdmin) return [];
+
+  const raw = await env.dfsui.get('app:admin');
+  if (!raw) return [];
+  
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [String(parsed)];
+  } catch {
+    // Legacy support: if it's a plain string like "admin@example.com"
+    return [raw];
+  }
+}
