@@ -214,10 +214,8 @@ export default function KeywordResearchLanding() {
               <span className="text-primary">DFS</span>UI
             </Link>
             <div className="flex gap-10 text-xs font-black uppercase tracking-widest text-slate-400">
-              <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-              <Link href="/keyword-research" className="hover:text-primary transition-colors">Keyword Tool (EN)</Link>
-              <Link href="/keyword-research-tool-in-hindi" className="hover:text-primary transition-colors">Keyword Tool (HI)</Link>
-              <a href="https://github.com/acondura/dfsui" target="_blank" className="hover:text-primary transition-colors">GitHub</a>
+              <Link href="/keyword-research-tool-in-hindi" className="hover:text-primary transition-colors">Keyword research tool in hindi</Link>
+              <a href="https://github.com/acondura/dfsui" target="_blank" className="hover:text-primary transition-colors">Github</a>
               <Link href="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>
             </div>
             <p className="text-xs font-bold text-slate-400">© {new Date().getFullYear()} DFS UI. Built for the modern SEO.</p>

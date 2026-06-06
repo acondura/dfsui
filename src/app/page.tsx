@@ -99,10 +99,8 @@ export default function HomePage() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 text-xs font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-600">
-            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-            <Link href="/keyword-research" className="hover:text-primary transition-colors">Keyword Tool (EN)</Link>
-            <Link href="/keyword-research-tool-in-hindi" className="hover:text-primary transition-colors">Keyword Tool (HI)</Link>
-            <a href="https://github.com/acondura/dfsui" target="_blank" className="hover:text-primary transition-colors">GitHub</a>
+            <Link href="/keyword-research-tool-in-hindi" className="hover:text-primary transition-colors">Keyword research tool in hindi</Link>
+            <a href="https://github.com/acondura/dfsui" target="_blank" className="hover:text-primary transition-colors">Github</a>
             <Link href="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>
           </div>
           

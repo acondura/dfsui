@@ -487,10 +487,8 @@ export default function HindiKeywordResearchPage() {
             <span className="text-lg font-black uppercase tracking-widest italic">DFS UI</span>
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-xs font-black uppercase tracking-widest text-zinc-400">
-            <Link href="/" className="hover:text-primary transition-colors">होम</Link>
-            <Link href="/keyword-research" className="hover:text-primary transition-colors">कीवर्ड टूल (EN)</Link>
-            <Link href="/keyword-research-tool-in-hindi" className="hover:text-primary transition-colors">कीवर्ड टूल (HI)</Link>
-            <a href="https://github.com/acondura/dfsui" target="_blank" className="hover:text-primary transition-colors">GitHub</a>
+            <Link href="/keyword-research-tool-in-hindi" className="hover:text-primary transition-colors">हिंदी में कीवर्ड रिसर्च टूल</Link>
+            <a href="https://github.com/acondura/dfsui" target="_blank" className="hover:text-primary transition-colors">Github</a>
             <Link href="/disclaimer" className="hover:text-primary transition-colors">डिस्क्लेमर</Link>
           </div>
           <p className="text-xs font-bold text-zinc-400 dark:text-zinc-600">
