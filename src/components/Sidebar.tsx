@@ -32,12 +32,11 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
     return name;
   };
 
-  // Close mobile menu on path change
+  // Close mobile menu only when the user navigates to a new page (pathname changes)
   useEffect(() => {
-    if (isMobileOpen) {
-      Promise.resolve().then(() => setIsMobileOpen(false));
-    }
-  }, [pathname, isMobileOpen]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMobileOpen(false);
+  }, [pathname]);
 
   return (
     <>

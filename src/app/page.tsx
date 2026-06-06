@@ -5,19 +5,19 @@ export const runtime = 'edge';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-primary/20 transition-colors duration-500">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-primary/20">
       
       {/* BACKGROUND DECORATION */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] animate-pulse delay-700" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px]" />
       </div>
 
       {/* HEADER */}
       <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800/50">
         <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-2xl shadow-primary/40 group-hover:rotate-12 transition-all duration-300">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-2xl shadow-primary/40 group-hover:rotate-12">
               <Zap size={22} className="text-white fill-current" />
             </div>
             <span className="text-2xl font-black tracking-tighter uppercase italic bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500">DFS UI</span>
@@ -40,19 +40,19 @@ export default function HomePage() {
 
       {/* HERO SECTION */}
       <main className="relative z-10 max-w-5xl mx-auto px-6 pt-24 md:pt-32 pb-20 text-center">
-        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-zinc-950 dark:text-white mb-8 leading-[1.1] animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-zinc-950 dark:text-white mb-8 leading-[1.1] fade-in slide-in-from-bottom-8 duration-1000 delay-100">
           Keyword research <br className="hidden md:block" />
           <span className="text-transparent bg-clip-text bg-gradient-to-br from-primary via-blue-500 to-indigo-400 px-2">
             done easy
           </span>
         </h1>
         
-        <div className="flex items-center justify-center gap-2 mb-10 text-zinc-500 dark:text-zinc-400 font-medium animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
+        <div className="flex items-center justify-center gap-2 mb-10 text-zinc-500 dark:text-zinc-400 font-medium fade-in slide-in-from-bottom-12 duration-1000 delay-200">
           <Database size={20} className="text-primary" />
           <span>Powered directly by the <strong>DataForSEO API</strong></span>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300 mb-20">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 fade-in slide-in-from-bottom-16 duration-1000 delay-300 mb-20">
           <Link 
             href="/dashboard" 
             className="group w-full sm:w-auto px-10 py-5 bg-primary text-white text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-black shadow-2xl shadow-primary/40 transition-all flex items-center justify-center gap-3"
@@ -63,7 +63,7 @@ export default function HomePage() {
         </div>
         
         {/* SCREENSHOTS SECTION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 animate-in fade-in slide-in-from-bottom-24 duration-1000 delay-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 fade-in slide-in-from-bottom-24 duration-1000 delay-500">
           <div className="flex flex-col gap-4 items-center">
             <div className="w-full relative aspect-video rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-2xl bg-zinc-100 dark:bg-zinc-900 group">
               {/* eslint-disable-next-line @next/next/no-img-element */}
