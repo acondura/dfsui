@@ -1,7 +1,16 @@
 import Link from 'next/link';
 import { ArrowRight, Zap, Database } from 'lucide-react';
+import type { Metadata } from 'next';
 
 export const runtime = 'edge';
+
+export const metadata: Metadata = {
+  title: "DFSUI - Bring Your Own Keys Keyword Research & SERP Analyzer",
+  description: "A high-performance, open-source interface for the DataForSEO API. Save 90% on keyword research and competitor optimization analysis with edge caching.",
+  alternates: {
+    canonical: '/',
+  }
+};
 
 export default function HomePage() {
   return (
@@ -24,6 +33,7 @@ export default function HomePage() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-10">
+            <Link href="/blog" className="text-sm font-bold text-zinc-500 hover:text-primary dark:text-zinc-400 dark:hover:text-primary transition-colors">Blog</Link>
             <Link href="/dashboard" className="text-sm font-bold text-zinc-500 hover:text-primary dark:text-zinc-400 dark:hover:text-primary transition-colors">Dashboard</Link>
             <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
             <a 
@@ -99,6 +109,7 @@ export default function HomePage() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-6 text-xs font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-600">
+            <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
             <Link href="/keyword-research-tool-in-hindi" className="hover:text-primary transition-colors">Keyword research tool in hindi</Link>
             <a href="https://github.com/acondura/dfsui" target="_blank" className="hover:text-primary transition-colors">Github</a>
             <Link href="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>

@@ -1,9 +1,18 @@
 // src/app/keyword-research/page.tsx
 import Link from 'next/link';
 import Image from 'next/image';
-import { Target, Zap, BarChart3, Search, CheckCircle2, ArrowRight, ShieldCheck, TrendingUp, Sparkles, LayoutPanelTop } from 'lucide-react';
+import { Target, Zap, BarChart3, Search, ArrowRight, ShieldCheck, TrendingUp, Sparkles, LayoutPanelTop } from 'lucide-react';
+import type { Metadata } from 'next';
 
 export const runtime = 'edge';
+
+export const metadata: Metadata = {
+  title: "Keyword Research Tool: Automated SERP & Competitor Audit | DFSUI",
+  description: "Stop paying massive monthly subscription fees. Run automated, pay-as-you-go keyword research and competitor optimization analysis directly via DataForSEO.",
+  alternates: {
+    canonical: '/keyword-research',
+  }
+};
 
 export default function KeywordResearchLanding() {
   const steps = [
@@ -66,6 +75,7 @@ export default function KeywordResearchLanding() {
           </Link>
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-sm font-bold text-slate-500 hover:text-primary transition-colors">Home</Link>
+            <Link href="/blog" className="text-sm font-bold text-slate-500 hover:text-primary transition-colors">Blog</Link>
             <Link href="#steps" className="text-sm font-bold text-slate-500 hover:text-primary transition-colors">Process</Link>
             <Link href="#advantages" className="text-sm font-bold text-slate-500 hover:text-primary transition-colors">Advantages</Link>
             <Link href="/dashboard" className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all">Dashboard</Link>
@@ -214,6 +224,7 @@ export default function KeywordResearchLanding() {
               <span className="text-primary">DFS</span>UI
             </Link>
             <div className="flex gap-10 text-xs font-black uppercase tracking-widest text-slate-400">
+              <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
               <Link href="/keyword-research-tool-in-hindi" className="hover:text-primary transition-colors">Keyword research tool in hindi</Link>
               <a href="https://github.com/acondura/dfsui" target="_blank" className="hover:text-primary transition-colors">Github</a>
               <Link href="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link>

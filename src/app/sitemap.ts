@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { CloudflareEnv } from '@/lib/auth';
+import { articles } from '@/lib/articles';
 
 export const runtime = 'edge';
 
@@ -14,6 +15,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const baseUrl = 'https://dfsui.com';
+
+  const blogPages: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    ...articles.map((article) => ({
+      url: `${baseUrl}/blog/${article.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }))
+  ];
 
   if (!env || !env.dfsui) {
     return [
@@ -41,6 +57,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly',
         priority: 0.8,
       },
+      ...blogPages,
     ];
   }
 
@@ -82,6 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
+    ...blogPages,
     ...pseoPages,
   ];
 }
