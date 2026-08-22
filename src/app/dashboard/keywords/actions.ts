@@ -95,9 +95,8 @@ export async function fetchKeywords(
       return i; 
     });
 
-    // Save to KV (even if empty to prevent double charging)
+    // Save to KV indefinitely (even if empty to prevent double charging)
     await env.dfsui.put(kvKey, JSON.stringify(results), { 
-      expirationTtl: 604800,
       metadata: { 
           timestamp: Date.now(),
           keyword,
@@ -338,9 +337,9 @@ export async function analyzeCompetition(keyword: string, locationCode: string, 
         return { domain: hostname, url: item.url, score, metrics };
     }));
 
-    // 3. Save to KV for next time (expires in 7 days)
+    // 3. Save to KV for next time (saved indefinitely)
     if (analysis.length > 0) {
-      await env.dfsui.put(kvKey, JSON.stringify(analysis), { expirationTtl: 604800 });
+      await env.dfsui.put(kvKey, JSON.stringify(analysis));
     }
 
     return { analysis, cost: data.tasks?.[0]?.cost || 0, cached: false };
