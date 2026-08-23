@@ -17,8 +17,7 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const activeTeam = allTeams.find(t => t.id === activeTeamId) || allTeams[0];
-  const teamDomain = process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN || 'k9czuj5q2zbo29nb';
-  const logoutUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/logout?returnTo=${encodeURIComponent('https://dfsui.com')}`;
+  const logoutUrl = '/auth/signout';
 
   const menuItems = [
     { name: t('dashboard'), href: '/dashboard', icon: LayoutDashboard },

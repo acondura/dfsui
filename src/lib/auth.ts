@@ -1,6 +1,5 @@
 // src/lib/auth.ts
 import { headers } from 'next/headers';
-import { importJWK, jwtVerify } from 'jose';
 import { z } from 'zod';
 
 // Security Schema: Ensures data is a valid email and prevents injection
@@ -9,7 +8,10 @@ const teamIdSchema = z.string().min(1).trim();
 
 export interface CloudflareEnv {
   dfsui: KVNamespace;
-  NEXT_PUBLIC_CF_TEAM_DOMAIN?: string;
+  AWS_ACCESS_KEY_ID?: string;
+  AWS_SECRET_ACCESS_KEY?: string;
+  AWS_REGION?: string;
+  EMAIL_FROM?: string;
 }
 
 export interface DFUserResponse {
@@ -26,111 +28,32 @@ export interface Team {
   isOwner: boolean;
 }
 
-interface JWK {
-  kty: string;
-  kid: string;
-  use?: string;
-  alg?: string;
-  n?: string;
-  e?: string;
-  [key: string]: unknown;
-}
-
 /**
- * Robustly decodes a Base64URL string (handling missing padding).
+ * Returns the authenticated user's email.
+ * In production the middleware validates the session cookie and forwards the
+ * email as the x-user-email request header. In development it returns a fixed
+ * test identity so the KV/credentials flow can be exercised locally.
  */
-function base64UrlDecode(str: string): string {
-  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-  while (base64.length % 4) base64 += '=';
-  return globalThis.atob(base64);
-}
-
-/**
- * Decodes a JWT payload without verification.
- */
-function decodeJwtUnsafe(jwt: string): string | null {
-  try {
-    const parts = jwt.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(base64UrlDecode(parts[1]));
-    return (payload.email || payload.sub || null)?.toLowerCase();
-  } catch {
-    return null;
-  }
-}
-
-async function verifyAccessJwt(jwt: string, env: CloudflareEnv): Promise<string | null> {
-  let teamDomain = (env.NEXT_PUBLIC_CF_TEAM_DOMAIN || process.env.NEXT_PUBLIC_CF_TEAM_DOMAIN || '').trim();
-  teamDomain = teamDomain.replace(/^https?:\/\//, '').replace('.cloudflareaccess.com', '').split('/')[0];
-  
-  if (!teamDomain) return null;
-
-  // Restored multi-endpoint logic for JWKS and Certs
-  const endpoints = [
-    `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/jwks`,
-    `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/certs`
-  ];
-
-  let keys: JWK[] = [];
-  for (const url of endpoints) {
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json', 'User-Agent': 'DFSUI-Auth' },
-        next: { revalidate: 3600 }
-      });
-      if (response.ok) {
-        const data = await response.json() as { keys: JWK[] };
-        if (data.keys?.length > 0) {
-          keys = data.keys;
-          break;
-        }
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  try {
-    if (keys.length === 0) return null;
-    
-    // Attempt verification with the first available key
-    const publicKey = await importJWK(keys[0], 'RS256');
-    const { payload } = await jwtVerify(jwt, publicKey, {
-      issuer: `https://${teamDomain}.cloudflareaccess.com`,
-    });
-
-    const validated = emailSchema.safeParse(payload.email);
-    return validated.success ? validated.data : null;
-  } catch (e) {
-    const attemptedEmail = decodeJwtUnsafe(jwt);
-    console.error(`Security Alert: Invalid JWT for ${attemptedEmail || 'unknown'}. Error: ${e instanceof Error ? e.message : 'Unknown'}`);
-    return null; // FAIL CLOSED
-  }
-}
-
-export async function getIdentity(env: CloudflareEnv): Promise<string> {
-  // 1. Development Bypass
+export async function getIdentity(_env: CloudflareEnv): Promise<string> {
   if (process.env.NODE_ENV === 'development') {
-    return 'admin@example.com'; 
+    return 'admin@example.com';
   }
 
   const headersList = await headers();
-  const jwt = headersList.get('cf-access-jwt-assertion');
+  // Set by src/middleware.ts after successful session validation — never trust
+  // a value supplied directly by the client (middleware strips it first).
+  const email = headersList.get('x-user-email');
 
-  // 2. Strict JWT Verification
-  if (jwt) {
-    const verifiedEmail = await verifyAccessJwt(jwt, env);
-    if (verifiedEmail) return verifiedEmail;
-    
-    // If JWT exists but is invalid, we FAIL CLOSED for security
-    console.error("Security Alert: A JWT was provided but failed verification.");
-    throw new Error("Unauthorized: Invalid security token.");
+  if (!email) {
+    throw new Error('Unauthorized');
   }
 
-  // 3. Fail Closed (Removed insecure header fallback)
-  console.error("Security Alert: Access attempt without Cloudflare JWT assertion.");
-  throw new Error("Unauthorized: Cloudflare Access JWT is required.");
+  const validated = emailSchema.safeParse(email);
+  if (!validated.success) {
+    throw new Error('Unauthorized');
+  }
+
+  return validated.data;
 }
 
 export async function getTeamContext(env: CloudflareEnv) {

@@ -5,3 +5,11 @@ compatibility_flags = ["nodejs_compat"]
 [[kv_namespaces]]
 binding = "dfsui"
 id = "dfsui-local" # Doesn't matter for local dev
+
+[vars]
+# Set these in Cloudflare Pages → Settings → Environment variables (mark as Secrets)
+AWS_ACCESS_KEY_ID = ""
+AWS_SECRET_ACCESS_KEY = ""
+AWS_REGION = "us-east-1"
+# Must be a verified SES sender identity
+EMAIL_FROM = "DFSUI <noreply@dfsui.com>"
