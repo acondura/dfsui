@@ -4,6 +4,7 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 import { getTeamContext, CloudflareEnv, getIdentity } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { fetchKeywords } from '@/app/dashboard/keywords/actions';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -377,37 +378,102 @@ export async function toggleShareQuery(id: string) {
 }
 
 /**
- * Run a query: scan the user's cached keyword results and apply clause filters.
- * Returns matched keyword items (up to 1000 results across all cached searches).
+ * Run a query against DataForSEO data.
+ *
+ * Two modes:
+ *  1. SEARCH MODE  — when a `seed_keyword equals <value>` clause is present:
+ *     Fetches keyword data from DataForSEO (or KV cache) for that seed, then
+ *     applies all remaining clauses as filters on the returned items.
+ *
+ *  2. CACHE SCAN MODE — when no seed_keyword clause is present:
+ *     Scans the user's existing KV cache and applies all clauses as filters.
  */
-export async function runQuery(clauses: QueryClause[]): Promise<{ results: QueryResultItem[]; scanned: number; error?: string }> {
-  const { env } = getRequestContext() as { env: CloudflareEnv };
-  const email = await getIdentity(env);
-
-  // Validate clauses
+export async function runQuery(clauses: QueryClause[]): Promise<{ results: QueryResultItem[]; scanned: number; error?: string; mode?: string }> {
   if (!clauses || clauses.length === 0) {
     return { results: [], scanned: 0, error: 'No clauses defined.' };
   }
 
-  // List all cached keyword keys for this user (up to 100 keyword searches)
+  // ── Detect SEARCH MODE ──────────────────────────────────────────────────────
+  const seedClause = clauses.find(
+    c => c.field === 'seed_keyword' && c.operator === 'equals' && c.value.trim()
+  );
+
+  if (seedClause) {
+    // Extract optional search-parameter clauses (single equals values only)
+    const pick = (field: QueryField) =>
+      clauses.find(c => c.field === field && c.operator === 'equals')?.value;
+
+    const seedKeyword  = seedClause.value.trim();
+    const location     = pick('location')  || '2840';
+    const language     = pick('language')  || 'English';
+    const apiTypeRaw   = pick('api_type');
+    const apiType: 'labs' | 'live' = apiTypeRaw === 'live' ? 'live' : 'labs';
+    const engine       = pick('engine')    || 'google';
+
+    // Fetch (uses KV cache if available, otherwise hits DataForSEO)
+    const { results: rawItems, error } = await fetchKeywords(
+      seedKeyword, location, apiType, 'keyword_suggestions', engine, language
+    );
+    if (error) return { results: [], scanned: 0, error };
+
+    // Build source for all result items from this fetch
+    const source = { seed_keyword: seedKeyword, location, language, api_type: apiType, engine };
+
+    // Map raw keyword items to QueryResultItem
+    const mapped: QueryResultItem[] = (rawItems as any[]).map(item => ({
+      keyword:            item.keyword || '',
+      search_volume:      item.keyword_info?.search_volume,
+      cpc:                item.keyword_info?.cpc,
+      competition:        item.keyword_info?.competition,
+      competition_level:  item.keyword_info?.competition_level,
+      keyword_difficulty: item.keyword_properties?.keyword_difficulty,
+      impressions_etv:    item.impressions_etv,
+      main_intent:        item.search_intent_info?.main_intent,
+      source,
+    }));
+
+    // Apply filter clauses — skip the "search parameter" clauses used above
+    const searchParamFields = new Set<QueryField>(['seed_keyword', 'location', 'language', 'api_type', 'engine']);
+    const filterClauses = clauses.filter(
+      c => !searchParamFields.has(c.field) || c.operator !== 'equals'
+    );
+
+    const filtered = filterClauses.length > 0
+      ? mapped.filter(item => matchesClauses(item, filterClauses))
+      : mapped;
+
+    return {
+      results: filtered.sort((a, b) => (b.search_volume || 0) - (a.search_volume || 0)).slice(0, 1000),
+      scanned: rawItems.length,
+      mode: 'search',
+    };
+  }
+
+  // ── CACHE SCAN MODE ─────────────────────────────────────────────────────────
+  const { env } = getRequestContext() as { env: CloudflareEnv };
+  const email = await getIdentity(env);
+
+  // List all cached keyword keys for this user (up to 100 searches)
   const list = await env.dfsui.list({ prefix: `keywords:${email}:` });
   const keys = list.keys.slice(0, 100);
 
   if (keys.length === 0) {
-    return { results: [], scanned: 0 };
+    return {
+      results: [],
+      scanned: 0,
+      error: 'No cached keyword data found. Add a "Seed Keyword = your keyword" clause to fetch live data from DataForSEO.',
+      mode: 'cache',
+    };
   }
 
-  // Separate clauses that can pre-filter KV keys (metadata-only filters)
-  const metaFields: QueryField[] = ['seed_keyword', 'location', 'language', 'api_type', 'engine'];
+  // Pre-filter keys by metadata-level clauses (location, language, api_type, engine)
+  const metaFields: QueryField[] = ['location', 'language', 'api_type', 'engine'];
   const metaClauses = clauses.filter(c => metaFields.includes(c.field));
   const itemClauses = clauses.filter(c => !metaFields.includes(c.field));
 
-  // Pre-filter keys using metadata to avoid unnecessary KV reads
   const filteredKeys = keys.filter(key => {
     const meta = key.metadata as any;
-    if (!meta) return true; // no metadata, can't pre-filter
-
-    // Build a mock item from metadata to evaluate meta clauses
+    if (!meta || metaClauses.length === 0) return true;
     const metaItem: QueryResultItem = {
       keyword: '',
       source: {
@@ -418,11 +484,9 @@ export async function runQuery(clauses: QueryClause[]): Promise<{ results: Query
         engine: meta.engine || '',
       }
     };
-
     return matchesClauses(metaItem, metaClauses);
   });
 
-  // Fetch cached results for filtered keys in parallel
   const results: QueryResultItem[] = [];
   let scanned = 0;
 
@@ -431,21 +495,19 @@ export async function runQuery(clauses: QueryClause[]): Promise<{ results: Query
       const meta = key.metadata as any;
       const raw = await env.dfsui.get(key.name);
       if (!raw) return;
-
       try {
         const items = JSON.parse(raw) as any[];
         scanned += items.length;
-
         items.forEach(item => {
           const resultItem: QueryResultItem = {
-            keyword: item.keyword || '',
-            search_volume: item.keyword_info?.search_volume,
-            cpc: item.keyword_info?.cpc,
-            competition: item.keyword_info?.competition,
-            competition_level: item.keyword_info?.competition_level,
+            keyword:            item.keyword || '',
+            search_volume:      item.keyword_info?.search_volume,
+            cpc:                item.keyword_info?.cpc,
+            competition:        item.keyword_info?.competition,
+            competition_level:  item.keyword_info?.competition_level,
             keyword_difficulty: item.keyword_properties?.keyword_difficulty,
-            impressions_etv: item.impressions_etv,
-            main_intent: item.search_intent_info?.main_intent,
+            impressions_etv:    item.impressions_etv,
+            main_intent:        item.search_intent_info?.main_intent,
             source: {
               seed_keyword: meta?.keyword || '',
               location: meta?.location || '',
@@ -454,8 +516,6 @@ export async function runQuery(clauses: QueryClause[]): Promise<{ results: Query
               engine: meta?.engine || '',
             }
           };
-
-          // Apply item-level clauses (only if it also matches meta clauses — already pre-filtered above)
           if (itemClauses.length === 0 || matchesClauses(resultItem, itemClauses)) {
             results.push(resultItem);
           }
@@ -466,7 +526,7 @@ export async function runQuery(clauses: QueryClause[]): Promise<{ results: Query
     })
   );
 
-  // Deduplicate by keyword (keep highest volume)
+  // Deduplicate by keyword, keep highest volume instance
   const seen = new Map<string, QueryResultItem>();
   results.forEach(item => {
     const existing = seen.get(item.keyword);
@@ -479,5 +539,5 @@ export async function runQuery(clauses: QueryClause[]): Promise<{ results: Query
     .sort((a, b) => (b.search_volume || 0) - (a.search_volume || 0))
     .slice(0, 1000);
 
-  return { results: deduped, scanned };
+  return { results: deduped, scanned, mode: 'cache' };
 }
