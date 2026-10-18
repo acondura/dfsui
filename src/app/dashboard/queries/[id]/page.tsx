@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Share2, Loader2, AlertCircle } from 'lucide-react';
@@ -10,10 +10,11 @@ import { getQuery, saveQuery, runQuery, toggleShareQuery } from '@/app/dashboard
 import type { QueryClause, QueryResultItem, SavedQuery } from '@/app/dashboard/queries/actions';
 
 interface QueryDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function QueryDetailPage({ params }: QueryDetailPageProps) {
+  const { id } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
   const isEditMode = searchParams.get('edit') === '1';
@@ -29,7 +30,7 @@ export default function QueryDetailPage({ params }: QueryDetailPageProps) {
   const [scanned, setScanned]     = useState(0);
 
   useEffect(() => {
-    getQuery(params.id).then(q => {
+    getQuery(id).then(q => {
       if (!q) {
         setNotFound(true);
       } else {
@@ -42,7 +43,7 @@ export default function QueryDetailPage({ params }: QueryDetailPageProps) {
       setLoading(false);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.id]);
+  }, [id]);
 
   const handleRunClauses = async (clauses: QueryClause[]) => {
     setIsRunning(true);
@@ -60,14 +61,14 @@ export default function QueryDetailPage({ params }: QueryDetailPageProps) {
   const handleSave = async (name: string, description: string, clauses: QueryClause[]) => {
     setIsSaving(true);
     setError(null);
-    const result = await saveQuery({ id: params.id, name, description, clauses });
+    const result = await saveQuery({ id: id, name, description, clauses });
     setIsSaving(false);
     if (result.error) {
       setError(result.error);
     } else if (result.query) {
       setQuery(result.query);
       // Switch to run mode after saving
-      router.replace(`/dashboard/queries/${params.id}`);
+      router.replace(`/dashboard/queries/${id}`);
     }
   };
 
@@ -89,7 +90,7 @@ export default function QueryDetailPage({ params }: QueryDetailPageProps) {
         };
       });
       // Reload to get accurate sharedWith from server
-      const updated = await getQuery(params.id);
+      const updated = await getQuery(id);
       if (updated) setQuery(updated);
     }
     setIsSharing(false);
