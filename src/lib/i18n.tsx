@@ -12,6 +12,7 @@ const localDictionaries: { [lang: string]: Dictionary } = {
   en: {
     dashboard: 'Dashboard',
     keywords: 'Keywords',
+    queries: 'Queries',
     settings: 'Settings',
     sign_out: 'Sign Out',
     workspace: 'Workspace',

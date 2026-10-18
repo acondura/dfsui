@@ -132,7 +132,15 @@ export async function sendEmailSES(
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     console.error(`[SES] ${res.status}: ${text}`);
-    return { error: 'Failed to send email. Please try again.' };
+    // Parse SES error message for a more actionable response
+    let sesMessage = '';
+    try {
+      const parsed = JSON.parse(text);
+      sesMessage = parsed.message || parsed.Message || '';
+    } catch {
+      sesMessage = text.slice(0, 200);
+    }
+    return { error: `SES error ${res.status}: ${sesMessage || 'unknown error'}` };
   }
 
   return {};

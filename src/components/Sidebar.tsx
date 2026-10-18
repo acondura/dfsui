@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Search, Settings, LogOut, ChevronDown, Check, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Search, Settings, LogOut, ChevronDown, Check, Menu, X, Filter } from 'lucide-react';
 import { switchTeam } from '@/app/dashboard/settings/actions';
 import { Team } from '@/lib/auth';
 
@@ -22,6 +22,7 @@ export default function Sidebar({ allTeams = [], activeTeamId }: { allTeams?: Te
   const menuItems = [
     { name: t('dashboard'), href: '/dashboard', icon: LayoutDashboard },
     { name: t('keywords'), href: '/dashboard/keywords', icon: Search },
+    { name: t('queries'), href: '/dashboard/queries', icon: Filter },
     { name: t('settings'), href: '/dashboard/settings', icon: Settings },
   ];
 
