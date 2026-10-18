@@ -13,16 +13,21 @@ interface FieldDef {
 }
 
 const FIELDS: Record<QueryField, FieldDef> = {
-  keyword:       { label: 'Keyword',       type: 'string' },
-  seed_keyword:  { label: 'Seed Keyword',  type: 'string' },
-  search_volume: { label: 'Search Volume', type: 'number' },
-  cpc:           { label: 'CPC',           type: 'number' },
-  competition:   { label: 'Competition',   type: 'number' },
-  main_intent:   { label: 'Intent',        type: 'enum', enumValues: ['informational', 'navigational', 'commercial', 'transactional'] },
-  location:      { label: 'Location Code', type: 'string' },
-  language:      { label: 'Language',      type: 'string' },
-  api_type:      { label: 'API Type',      type: 'enum', enumValues: ['labs', 'live'] },
-  engine:        { label: 'Engine',        type: 'enum', enumValues: ['google', 'bing', 'yahoo', 'baidu'] },
+  // DataForSEO Labs / Keywords Data — result-level fields
+  keyword:            { label: 'Keyword',                          type: 'string' },
+  search_volume:      { label: 'Search Volume',                    type: 'number' },
+  cpc:                { label: 'CPC ($)',                          type: 'number' },
+  competition:        { label: 'Competition (0–1)',                 type: 'number' },
+  competition_level:  { label: 'Competition Level',                 type: 'enum', enumValues: ['LOW', 'MEDIUM', 'HIGH'] },
+  keyword_difficulty: { label: 'Keyword Difficulty (0–100)',        type: 'number' },
+  impressions_etv:    { label: 'Impressions ETV',                   type: 'number' },
+  main_intent:        { label: 'Search Intent',                     type: 'enum', enumValues: ['informational', 'navigational', 'commercial', 'transactional'] },
+  // Cache / search context fields
+  seed_keyword:       { label: 'Seed Keyword',                     type: 'string' },
+  location:           { label: 'Location Code',                    type: 'string' },
+  language:           { label: 'Language',                         type: 'string' },
+  api_type:           { label: 'API Type',                         type: 'enum', enumValues: ['labs', 'live'] },
+  engine:             { label: 'Engine',                           type: 'enum', enumValues: ['google', 'bing', 'yahoo', 'baidu'] },
 };
 
 interface OperatorDef {

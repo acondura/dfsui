@@ -42,8 +42,8 @@ export default function QueryResults({ results, scanned, queryName }: QueryResul
         ? a.keyword.localeCompare(b.keyword)
         : b.keyword.localeCompare(a.keyword);
     }
-    const av = a[sortBy] ?? 0;
-    const bv = b[sortBy] ?? 0;
+    const av = (a as any)[sortBy] ?? 0;
+    const bv = (b as any)[sortBy] ?? 0;
     return sortDir === 'asc' ? av - bv : bv - av;
   });
 
@@ -120,6 +120,7 @@ export default function QueryResults({ results, scanned, queryName }: QueryResul
                 >
                   CPC {sortBy === 'cpc' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
                 </th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">KD</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Intent</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Source</th>
               </tr>
@@ -144,6 +145,15 @@ export default function QueryResults({ results, scanned, queryName }: QueryResul
                     <span className="font-mono text-sm font-bold text-slate-600 dark:text-slate-400">
                       {item.cpc !== undefined ? `$${item.cpc.toFixed(2)}` : '—'}
                     </span>
+                  </td>
+                  <td className="px-6 py-3 text-right">
+                    {item.keyword_difficulty !== undefined ? (
+                      <span className={`font-mono text-sm font-bold ${
+                        item.keyword_difficulty >= 70 ? 'text-red-500' :
+                        item.keyword_difficulty >= 40 ? 'text-amber-500' :
+                        'text-green-500'
+                      }`}>{item.keyword_difficulty}</span>
+                    ) : <span className="text-slate-300">—</span>}
                   </td>
                   <td className="px-6 py-3">
                     {item.main_intent && (

@@ -9,16 +9,25 @@ export interface KeywordItem {
   keyword_info?: {
     search_volume?: number;
     cpc?: number;
+    competition?: number;
+    competition_level?: 'LOW' | 'MEDIUM' | 'HIGH';
     monthly_searches?: {
       year: number;
       month: number;
       search_volume: number;
     }[];
   };
+  // DataForSEO Labs: keyword difficulty, detected language
+  keyword_properties?: {
+    keyword_difficulty?: number;
+    detected_language?: string;
+  };
   search_intent_info?: {
     se_type?: string[];
     main_intent?: string;
   };
+  // DataForSEO Labs: estimated traffic value based on organic impressions
+  impressions_etv?: number;
 }
 
 export async function fetchKeywords(
@@ -86,13 +95,18 @@ export async function fetchKeywords(
       if (apiType === 'labs') {
         const info = i.keyword_info || i.keyword_data?.keyword_info;
         const intent = i.search_intent_info || i.keyword_data?.search_intent_info;
+        // Preserve keyword_properties (keyword_difficulty, detected_language) and impressions_etv
+        const props = i.keyword_properties || i.keyword_data?.keyword_properties;
+        const etv = i.impressions_etv ?? i.keyword_data?.impressions_etv;
         return {
           keyword: i.keyword || i.keyword_data?.keyword || 'Unknown',
           keyword_info: info,
-          search_intent_info: intent
+          keyword_properties: props,
+          search_intent_info: intent,
+          impressions_etv: etv,
         };
       }
-      return i; 
+      return i;
     });
 
     // Save to KV indefinitely (even if empty to prevent double charging)

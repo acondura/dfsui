@@ -8,16 +8,21 @@ import { z } from 'zod';
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type QueryField =
-  | 'keyword'        // keyword text from results
-  | 'seed_keyword'   // the seed keyword used to fetch the result set
-  | 'search_volume'  // number from keyword_info.search_volume
-  | 'cpc'            // number from keyword_info.cpc
-  | 'competition'    // number from keyword_info.competition_index
-  | 'main_intent'    // string from search_intent_info.main_intent
-  | 'location'       // location code from KV metadata
-  | 'language'       // language name from KV metadata
-  | 'api_type'       // 'labs' | 'live' from KV metadata
-  | 'engine';        // 'google' | 'bing' etc. from KV metadata
+  // DataForSEO result-level fields
+  | 'keyword'             // keyword text (string)
+  | 'search_volume'       // keyword_info.search_volume (number)
+  | 'cpc'                 // keyword_info.cpc (number)
+  | 'competition'         // keyword_info.competition index 0–1 (number)
+  | 'competition_level'   // keyword_info.competition_level LOW/MEDIUM/HIGH (enum)
+  | 'keyword_difficulty'  // keyword_properties.keyword_difficulty 0–100 (number)
+  | 'impressions_etv'     // impressions_etv estimated traffic value (number)
+  | 'main_intent'         // search_intent_info.main_intent (enum)
+  // Search context fields (from KV cache metadata)
+  | 'seed_keyword'        // the seed keyword used to fetch the result set
+  | 'location'            // location code from KV metadata
+  | 'language'            // language name from KV metadata
+  | 'api_type'            // 'labs' | 'live' from KV metadata
+  | 'engine';             // 'google' | 'bing' etc. from KV metadata
 
 export type QueryOperator =
   | 'equals'
@@ -56,6 +61,9 @@ export interface QueryResultItem {
   search_volume?: number;
   cpc?: number;
   competition?: number;
+  competition_level?: string;
+  keyword_difficulty?: number;
+  impressions_etv?: number;
   main_intent?: string;
   source: {
     seed_keyword: string;
@@ -71,7 +79,7 @@ export interface QueryResultItem {
 const ClauseSchema = z.object({
   id: z.string().min(1).max(36),
   logicalOperator: z.enum(['AND', 'OR']),
-  field: z.enum(['keyword', 'seed_keyword', 'search_volume', 'cpc', 'competition', 'main_intent', 'location', 'language', 'api_type', 'engine']),
+  field: z.enum(['keyword', 'seed_keyword', 'search_volume', 'cpc', 'competition', 'competition_level', 'keyword_difficulty', 'impressions_etv', 'main_intent', 'location', 'language', 'api_type', 'engine']),
   operator: z.enum(['equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'gt', 'lt', 'gte', 'lte']),
   value: z.string().max(500),
 });
@@ -90,16 +98,19 @@ function evaluateClause(item: QueryResultItem, clause: QueryClause): boolean {
   let fieldValue: string | number | undefined;
 
   switch (clause.field) {
-    case 'keyword':       fieldValue = item.keyword; break;
-    case 'seed_keyword':  fieldValue = item.source.seed_keyword; break;
-    case 'search_volume': fieldValue = item.search_volume; break;
-    case 'cpc':           fieldValue = item.cpc; break;
-    case 'competition':   fieldValue = item.competition; break;
-    case 'main_intent':   fieldValue = item.main_intent; break;
-    case 'location':      fieldValue = item.source.location; break;
-    case 'language':      fieldValue = item.source.language; break;
-    case 'api_type':      fieldValue = item.source.api_type; break;
-    case 'engine':        fieldValue = item.source.engine; break;
+    case 'keyword':            fieldValue = item.keyword; break;
+    case 'seed_keyword':       fieldValue = item.source.seed_keyword; break;
+    case 'search_volume':      fieldValue = item.search_volume; break;
+    case 'cpc':                fieldValue = item.cpc; break;
+    case 'competition':        fieldValue = item.competition; break;
+    case 'competition_level':  fieldValue = item.competition_level; break;
+    case 'keyword_difficulty': fieldValue = item.keyword_difficulty; break;
+    case 'impressions_etv':    fieldValue = item.impressions_etv; break;
+    case 'main_intent':        fieldValue = item.main_intent; break;
+    case 'location':           fieldValue = item.source.location; break;
+    case 'language':           fieldValue = item.source.language; break;
+    case 'api_type':           fieldValue = item.source.api_type; break;
+    case 'engine':             fieldValue = item.source.engine; break;
     default: return false;
   }
 
@@ -430,7 +441,10 @@ export async function runQuery(clauses: QueryClause[]): Promise<{ results: Query
             keyword: item.keyword || '',
             search_volume: item.keyword_info?.search_volume,
             cpc: item.keyword_info?.cpc,
-            competition: item.keyword_info?.competition_index,
+            competition: item.keyword_info?.competition,
+            competition_level: item.keyword_info?.competition_level,
+            keyword_difficulty: item.keyword_properties?.keyword_difficulty,
+            impressions_etv: item.impressions_etv,
             main_intent: item.search_intent_info?.main_intent,
             source: {
               seed_keyword: meta?.keyword || '',
