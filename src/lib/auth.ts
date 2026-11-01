@@ -1,5 +1,5 @@
 // src/lib/auth.ts
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import { z } from 'zod';
 
 // Security Schema: Ensures data is a valid email and prevents injection
@@ -28,27 +28,54 @@ export interface Team {
   isOwner: boolean;
 }
 
+// UUID format for session tokens created by crypto.randomUUID()
+const uuidSchema = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
 /**
  * Returns the authenticated user's email.
- * In production the middleware validates the session cookie and forwards the
- * email as the x-user-email request header. In development it returns a fixed
- * test identity so the KV/credentials flow can be exercised locally.
+ *
+ * Primary path: middleware validates the session cookie and forwards the email
+ * as the x-user-email request header (used for server component renders).
+ *
+ * Fallback path: for server actions, the middleware-forwarded header may not
+ * propagate — in that case we read the session cookie directly and validate it
+ * against KV, mirroring exactly what middleware does.
  */
-export async function getIdentity(_env: CloudflareEnv): Promise<string> {
+export async function getIdentity(env: CloudflareEnv): Promise<string> {
   if (process.env.NODE_ENV === 'development') {
     return 'admin@example.com';
   }
 
+  // Primary: trust the header set by middleware (stripped of client-supplied
+  // values by middleware before being re-set with the validated KV email).
   const headersList = await headers();
-  // Set by src/middleware.ts after successful session validation — never trust
-  // a value supplied directly by the client (middleware strips it first).
-  const email = headersList.get('x-user-email');
+  const headerEmail = headersList.get('x-user-email');
+  if (headerEmail) {
+    const validated = emailSchema.safeParse(headerEmail);
+    if (validated.success) return validated.data;
+  }
 
-  if (!email) {
+  // Fallback: validate the session cookie directly against KV.
+  // Required for server actions where middleware header forwarding may not apply.
+  if (!env?.dfsui) {
     throw new Error('Unauthorized');
   }
 
-  const validated = emailSchema.safeParse(email);
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get('session')?.value;
+
+  // Reject any value that doesn't match the exact UUID format we generate
+  if (!sessionToken || !uuidSchema.test(sessionToken)) {
+    throw new Error('Unauthorized');
+  }
+
+  const raw = await env.dfsui.get(`session:${sessionToken}`);
+  if (!raw) {
+    throw new Error('Unauthorized');
+  }
+
+  const { email: sessionEmail } = JSON.parse(raw) as { email: string };
+  const validated = emailSchema.safeParse(sessionEmail);
   if (!validated.success) {
     throw new Error('Unauthorized');
   }
