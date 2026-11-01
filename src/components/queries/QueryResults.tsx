@@ -143,11 +143,11 @@ export default function QueryResults({ results, scanned, queryName }: QueryResul
                   </td>
                   <td className="px-6 py-3 text-right">
                     <span className="font-mono text-sm font-bold text-slate-600 dark:text-slate-400">
-                      {item.cpc !== undefined ? `$${item.cpc.toFixed(2)}` : '—'}
+                      {item.cpc != null ? `$${item.cpc.toFixed(2)}` : '—'}
                     </span>
                   </td>
                   <td className="px-6 py-3 text-right">
-                    {item.keyword_difficulty !== undefined ? (
+                    {item.keyword_difficulty != null ? (
                       <span className={`font-mono text-sm font-bold ${
                         item.keyword_difficulty >= 70 ? 'text-red-500' :
                         item.keyword_difficulty >= 40 ? 'text-amber-500' :
