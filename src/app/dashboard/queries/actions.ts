@@ -411,10 +411,18 @@ export async function runQuery(clauses: QueryClause[]): Promise<{ results: Query
     const engine       = pick('engine')    || 'google';
 
     // Fetch (uses KV cache if available, otherwise hits DataForSEO)
-    const { results: rawItems, error } = await fetchKeywords(
-      seedKeyword, location, apiType, 'keyword_suggestions', engine, language
-    );
-    if (error) return { results: [], scanned: 0, error };
+    let rawItems: any[] = [];
+    try {
+      const fetched = await fetchKeywords(
+        seedKeyword, location, apiType, 'keyword_suggestions', engine, language
+      );
+      if (fetched.error) return { results: [], scanned: 0, error: fetched.error };
+      rawItems = fetched.results as any[];
+    } catch (err) {
+      // Surface actual error message for debugging — Next.js hides it in production otherwise
+      const msg = err instanceof Error ? err.message : String(err);
+      return { results: [], scanned: 0, error: `Fetch failed: ${msg}` };
+    }
 
     // Build source for all result items from this fetch
     const source = { seed_keyword: seedKeyword, location, language, api_type: apiType, engine };
@@ -450,8 +458,16 @@ export async function runQuery(clauses: QueryClause[]): Promise<{ results: Query
   }
 
   // ── CACHE SCAN MODE ─────────────────────────────────────────────────────────
-  const { env } = getRequestContext() as { env: CloudflareEnv };
-  const email = await getIdentity(env);
+  let env: CloudflareEnv;
+  let email: string;
+  try {
+    const ctx = getRequestContext() as { env: CloudflareEnv };
+    env = ctx.env;
+    email = await getIdentity(env);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { results: [], scanned: 0, error: `Auth error: ${msg}`, mode: 'cache' };
+  }
 
   // List all cached keyword keys for this user (up to 100 searches)
   const list = await env.dfsui.list({ prefix: `keywords:${email}:` });
