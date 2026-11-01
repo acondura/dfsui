@@ -20,14 +20,53 @@ interface FieldDef {
   enumOptions?: EnumOption[];
 }
 
-// All language names accepted by the DataForSEO Labs API (language_name field)
-const DFS_LANGUAGES: string[] = [
-  'Arabic', 'Bengali', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional',
-  'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French',
-  'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Indonesian', 'Italian', 'Japanese',
-  'Korean', 'Latvian', 'Lithuanian', 'Malay', 'Maltese', 'Norwegian', 'Persian', 'Polish',
-  'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish',
-  'Swedish', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese',
+// DataForSEO Labs API requires language_code (ISO 639-1).
+// label = display name, value = code sent to the API.
+const DFS_LANGUAGES: EnumOption[] = [
+  { label: 'Arabic',             value: 'ar'    },
+  { label: 'Bengali',            value: 'bn'    },
+  { label: 'Bulgarian',          value: 'bg'    },
+  { label: 'Catalan',            value: 'ca'    },
+  { label: 'Chinese Simplified', value: 'zh-cn' },
+  { label: 'Chinese Traditional',value: 'zh-tw' },
+  { label: 'Croatian',           value: 'hr'    },
+  { label: 'Czech',              value: 'cs'    },
+  { label: 'Danish',             value: 'da'    },
+  { label: 'Dutch',              value: 'nl'    },
+  { label: 'English',            value: 'en'    },
+  { label: 'Estonian',           value: 'et'    },
+  { label: 'Finnish',            value: 'fi'    },
+  { label: 'French',             value: 'fr'    },
+  { label: 'German',             value: 'de'    },
+  { label: 'Greek',              value: 'el'    },
+  { label: 'Hebrew',             value: 'iw'    },
+  { label: 'Hindi',              value: 'hi'    },
+  { label: 'Hungarian',          value: 'hu'    },
+  { label: 'Indonesian',         value: 'id'    },
+  { label: 'Italian',            value: 'it'    },
+  { label: 'Japanese',           value: 'ja'    },
+  { label: 'Korean',             value: 'ko'    },
+  { label: 'Latvian',            value: 'lv'    },
+  { label: 'Lithuanian',         value: 'lt'    },
+  { label: 'Malay',              value: 'ms'    },
+  { label: 'Maltese',            value: 'mt'    },
+  { label: 'Norwegian',          value: 'no'    },
+  { label: 'Persian',            value: 'fa'    },
+  { label: 'Polish',             value: 'pl'    },
+  { label: 'Portuguese',         value: 'pt'    },
+  { label: 'Romanian',           value: 'ro'    },
+  { label: 'Russian',            value: 'ru'    },
+  { label: 'Serbian',            value: 'sr'    },
+  { label: 'Slovak',             value: 'sk'    },
+  { label: 'Slovenian',          value: 'sl'    },
+  { label: 'Spanish',            value: 'es'    },
+  { label: 'Swedish',            value: 'sv'    },
+  { label: 'Tamil',              value: 'ta'    },
+  { label: 'Thai',               value: 'th'    },
+  { label: 'Turkish',            value: 'tr'    },
+  { label: 'Ukrainian',          value: 'uk'    },
+  { label: 'Urdu',               value: 'ur'    },
+  { label: 'Vietnamese',         value: 'vi'    },
 ];
 
 // Most-used DataForSEO location codes (value = code, label = country name)
@@ -94,7 +133,7 @@ const FIELDS: Record<QueryField, FieldDef> = {
   // Cache / search context fields
   seed_keyword:       { label: 'Seed Keyword',                     type: 'string' },
   location:           { label: 'Location',                         type: 'enum', enumOptions: DFS_LOCATIONS },
-  language:           { label: 'Language',                         type: 'enum', enumValues: DFS_LANGUAGES },
+  language:           { label: 'Language',                         type: 'enum', enumOptions: DFS_LANGUAGES },
   api_type:           { label: 'API Type',                         type: 'enum', enumValues: ['labs', 'live'] },
   engine:             { label: 'Engine',                           type: 'enum', enumValues: ['google', 'bing', 'yahoo', 'baidu'] },
 };

@@ -61,9 +61,10 @@ export async function fetchKeywords(
 
   const auth = btoa(`${dfsUser}:${dfsPass}`);
   
-  // DataForSEO expects Title Case language names (e.g. "Romanian", "Chinese Simplified")
-  // Normalize user input so "romanian" or "ENGLISH" are accepted without error
-  const languageNormalized = language.trim().replace(/\w+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  // DataForSEO Labs uses language_code (ISO 639-1, e.g. "ro", "en").
+  // Keywords Data API also accepts language_code, so we use it for both.
+  // The language value from the query builder is already an ISO code (stored that way in the dropdown).
+  const languageCode = language.trim().toLowerCase();
 
   let endpoint = '';
   let payload: any[] = [];
@@ -71,15 +72,15 @@ export async function fetchKeywords(
   if (apiType === 'labs') {
     endpoint = `https://api.dataforseo.com/v3/dataforseo_labs/${engine}/${labsFunction}/live`;
     if (labsFunction === 'keyword_suggestions') {
-        payload = [{ keyword, location_code: locCode, language_name: languageNormalized, limit: 1000 }];
+        payload = [{ keyword, location_code: locCode, language_code: languageCode, limit: 1000 }];
     } else {
-        payload = [{ keywords: [keyword], location_code: locCode, language_name: languageNormalized, limit: 1000 }];
+        payload = [{ keywords: [keyword], location_code: locCode, language_code: languageCode, limit: 1000 }];
     }
   } else {
     // Keywords Data API - Mapping to Google Ads as primary live source
     const subEngine = engine === 'google' ? 'google_ads' : engine;
     endpoint = `https://api.dataforseo.com/v3/keywords_data/${subEngine}/keywords_for_keywords/live`;
-    payload = [{ keywords: [keyword], location_code: locCode, language_name: languageNormalized, include_seed_keyword: true }];
+    payload = [{ keywords: [keyword], location_code: locCode, language_code: languageCode, include_seed_keyword: true }];
   }
 
   try {
