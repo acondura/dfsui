@@ -20,26 +20,36 @@ export default function NewQueryPage() {
   const handleSave = async (name: string, description: string, clauses: QueryClause[]) => {
     setIsSaving(true);
     setError(null);
-    const result = await saveQuery({ name, description, clauses });
-    setIsSaving(false);
-    if (result.error) {
-      setError(result.error);
-    } else if (result.query) {
-      // Redirect to the query's detail page after saving
-      router.push(`/dashboard/queries/${result.query.id}`);
+    try {
+      const result = await saveQuery({ name, description, clauses });
+      if (result.error) {
+        setError(result.error);
+      } else if (result.query) {
+        // Redirect to the query's detail page after saving
+        router.push(`/dashboard/queries/${result.query.id}`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save query. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleRun = async (clauses: QueryClause[]) => {
     setIsRunning(true);
     setError(null);
-    const result = await runQuery(clauses);
-    setIsRunning(false);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setResults(result.results);
-      setScanned(result.scanned);
+    try {
+      const result = await runQuery(clauses);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setResults(result.results);
+        setScanned(result.scanned);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsRunning(false);
     }
   };
 

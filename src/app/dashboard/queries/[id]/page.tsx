@@ -41,6 +41,9 @@ export default function QueryDetailPage({ params }: QueryDetailPageProps) {
         }
       }
       setLoading(false);
+    }).catch(err => {
+      setError(err instanceof Error ? err.message : 'Failed to load query.');
+      setLoading(false);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -48,52 +51,67 @@ export default function QueryDetailPage({ params }: QueryDetailPageProps) {
   const handleRunClauses = async (clauses: QueryClause[]) => {
     setIsRunning(true);
     setError(null);
-    const result = await runQuery(clauses);
-    setIsRunning(false);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setResults(result.results);
-      setScanned(result.scanned);
+    try {
+      const result = await runQuery(clauses);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setResults(result.results);
+        setScanned(result.scanned);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsRunning(false);
     }
   };
 
   const handleSave = async (name: string, description: string, clauses: QueryClause[]) => {
     setIsSaving(true);
     setError(null);
-    const result = await saveQuery({ id: id, name, description, clauses });
-    setIsSaving(false);
-    if (result.error) {
-      setError(result.error);
-    } else if (result.query) {
-      setQuery(result.query);
-      // Switch to run mode after saving
-      router.replace(`/dashboard/queries/${id}`);
+    try {
+      const result = await saveQuery({ id: id, name, description, clauses });
+      if (result.error) {
+        setError(result.error);
+      } else if (result.query) {
+        setQuery(result.query);
+        // Switch to run mode after saving
+        router.replace(`/dashboard/queries/${id}`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save query. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleShare = async () => {
     if (!query) return;
     setIsSharing(true);
-    const result = await toggleShareQuery(query.id);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      // Update local shared state
-      setQuery(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          sharedWith: result.shared
-            ? [...prev.sharedWith, '__active_team__'] // placeholder; reload will fix it
-            : []
-        };
-      });
-      // Reload to get accurate sharedWith from server
-      const updated = await getQuery(id);
-      if (updated) setQuery(updated);
+    try {
+      const result = await toggleShareQuery(query.id);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        // Update local shared state
+        setQuery(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            sharedWith: result.shared
+              ? [...prev.sharedWith, '__active_team__'] // placeholder; reload will fix it
+              : []
+          };
+        });
+        // Reload to get accurate sharedWith from server
+        const updated = await getQuery(id);
+        if (updated) setQuery(updated);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update sharing. Please try again.');
+    } finally {
+      setIsSharing(false);
     }
-    setIsSharing(false);
   };
 
   if (loading) {

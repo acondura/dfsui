@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lightbulb, ChevronRight, Zap, TrendingUp, Target, DollarSign } from 'lucide-react';
+import { Lightbulb, ChevronRight, Zap, TrendingUp, DollarSign } from 'lucide-react';
 import QueryBuilder from '@/components/queries/QueryBuilder';
 import QueryResults from '@/components/queries/QueryResults';
 import { saveQuery, runQuery } from '@/app/dashboard/queries/actions';
@@ -19,16 +19,6 @@ interface ExampleTemplate {
 }
 
 const EXAMPLES: ExampleTemplate[] = [
-  {
-    name: 'Drupal upgrade competition',
-    description: 'Fetch keywords related to "drupal upgrade" and see their competition',
-    icon: Target,
-    color: 'text-blue-500',
-    clauses: [
-      { logicalOperator: 'AND', field: 'seed_keyword', operator: 'equals', value: 'drupal upgrade' },
-      { logicalOperator: 'AND', field: 'competition_level', operator: 'equals', value: 'LOW' },
-    ],
-  },
   {
     name: 'High-volume commercial',
     description: 'Keywords with high search volume and commercial intent',
@@ -80,13 +70,18 @@ export default function DashboardPage() {
   const handleSave = async (name: string, description: string, clauses: QueryClause[]) => {
     setIsSaving(true);
     setError(null);
-    const result = await saveQuery({ name, description, clauses });
-    setIsSaving(false);
-    if (result.error) {
-      setError(result.error);
-    } else if (result.query) {
-      router.push(`/dashboard/queries/${result.query.id}`);
-      router.refresh();
+    try {
+      const result = await saveQuery({ name, description, clauses });
+      if (result.error) {
+        setError(result.error);
+      } else if (result.query) {
+        router.push(`/dashboard/queries/${result.query.id}`);
+        router.refresh();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save query. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -94,15 +89,20 @@ export default function DashboardPage() {
     setIsRunning(true);
     setError(null);
     setResults(null);
-    const result = await runQuery(clauses);
-    setIsRunning(false);
-    if (result.error && result.results.length === 0) {
-      setError(result.error);
-    } else {
-      setResults(result.results);
-      setScanned(result.scanned);
-      // Warn but still show results if partial error
-      if (result.error) setError(result.error);
+    try {
+      const result = await runQuery(clauses);
+      if (result.error && result.results.length === 0) {
+        setError(result.error);
+      } else {
+        setResults(result.results);
+        setScanned(result.scanned);
+        // Warn but still show results if partial error
+        if (result.error) setError(result.error);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsRunning(false);
     }
   };
 
