@@ -61,26 +61,25 @@ export async function fetchKeywords(
 
   const auth = btoa(`${dfsUser}:${dfsPass}`);
   
-  // DataForSEO Labs uses language_code (ISO 639-1, e.g. "ro", "en").
-  // Keywords Data API also accepts language_code, so we use it for both.
-  // The language value from the query builder is already an ISO code (stored that way in the dropdown).
-  const languageCode = language.trim().toLowerCase();
-
+  // Language is NOT sent as an API parameter — DataForSEO Labs rejects language_code / language_name
+  // for many location+language combinations (e.g. location_code 2840 + language "ro" is unsupported).
+  // Instead, language is stored in KV metadata so cache-scan mode can filter by it client-side.
+  // Users who need language filtering should set the correct Location for the target market.
   let endpoint = '';
   let payload: any[] = [];
 
   if (apiType === 'labs') {
     endpoint = `https://api.dataforseo.com/v3/dataforseo_labs/${engine}/${labsFunction}/live`;
     if (labsFunction === 'keyword_suggestions') {
-        payload = [{ keyword, location_code: locCode, language_code: languageCode, limit: 1000 }];
+        payload = [{ keyword, location_code: locCode, limit: 1000 }];
     } else {
-        payload = [{ keywords: [keyword], location_code: locCode, language_code: languageCode, limit: 1000 }];
+        payload = [{ keywords: [keyword], location_code: locCode, limit: 1000 }];
     }
   } else {
     // Keywords Data API - Mapping to Google Ads as primary live source
     const subEngine = engine === 'google' ? 'google_ads' : engine;
     endpoint = `https://api.dataforseo.com/v3/keywords_data/${subEngine}/keywords_for_keywords/live`;
-    payload = [{ keywords: [keyword], location_code: locCode, language_code: languageCode, include_seed_keyword: true }];
+    payload = [{ keywords: [keyword], location_code: locCode, include_seed_keyword: true }];
   }
 
   try {

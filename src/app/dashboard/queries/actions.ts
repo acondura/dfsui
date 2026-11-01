@@ -440,8 +440,10 @@ export async function runQuery(clauses: QueryClause[]): Promise<{ results: Query
       source,
     }));
 
-    // Apply filter clauses — skip the "search parameter" clauses used above
-    const searchParamFields = new Set<QueryField>(['seed_keyword', 'location', 'language', 'api_type', 'engine']);
+    // Apply filter clauses — skip clauses used to define the API call above.
+    // Note: 'language' is intentionally NOT in this set — language is no longer
+    // sent as an API parameter, so keep it as a client-side filter on source.language.
+    const searchParamFields = new Set<QueryField>(['seed_keyword', 'location', 'api_type', 'engine']);
     const filterClauses = clauses.filter(
       c => !searchParamFields.has(c.field) || c.operator !== 'equals'
     );
