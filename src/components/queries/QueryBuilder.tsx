@@ -6,11 +6,80 @@ import type { QueryClause, QueryField, QueryOperator } from '@/app/dashboard/que
 
 // ─── Field & Operator Definitions ────────────────────────────────────────────
 
+interface EnumOption {
+  label: string;
+  value: string;
+}
+
 interface FieldDef {
   label: string;
   type: 'string' | 'number' | 'enum';
+  // Simple enum: value === label (e.g. 'LOW', 'HIGH')
   enumValues?: string[];
+  // Rich enum: value !== label (e.g. location code vs country name)
+  enumOptions?: EnumOption[];
 }
+
+// All language names accepted by the DataForSEO Labs API (language_name field)
+const DFS_LANGUAGES: string[] = [
+  'Arabic', 'Bengali', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional',
+  'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French',
+  'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Indonesian', 'Italian', 'Japanese',
+  'Korean', 'Latvian', 'Lithuanian', 'Malay', 'Maltese', 'Norwegian', 'Persian', 'Polish',
+  'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish',
+  'Swedish', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese',
+];
+
+// Most-used DataForSEO location codes (value = code, label = country name)
+const DFS_LOCATIONS: EnumOption[] = [
+  { label: 'United States',         value: '2840' },
+  { label: 'United Kingdom',        value: '2826' },
+  { label: 'Canada',                value: '2124' },
+  { label: 'Australia',             value: '2036' },
+  { label: 'Germany',               value: '2276' },
+  { label: 'France',                value: '2250' },
+  { label: 'Italy',                 value: '2380' },
+  { label: 'Spain',                 value: '2724' },
+  { label: 'Brazil',                value: '2076' },
+  { label: 'Mexico',                value: '2484' },
+  { label: 'Netherlands',           value: '2528' },
+  { label: 'Poland',                value: '2616' },
+  { label: 'Sweden',                value: '2752' },
+  { label: 'Norway',                value: '2578' },
+  { label: 'Denmark',               value: '2208' },
+  { label: 'Finland',               value: '2246' },
+  { label: 'Belgium',               value: '2056' },
+  { label: 'Hungary',               value: '2348' },
+  { label: 'Czech Republic',        value: '2203' },
+  { label: 'Romania',               value: '2642' },
+  { label: 'Turkey',                value: '2792' },
+  { label: 'Ukraine',               value: '2804' },
+  { label: 'India',                 value: '2356' },
+  { label: 'Japan',                 value: '2392' },
+  { label: 'South Korea',           value: '2410' },
+  { label: 'China',                 value: '2156' },
+  { label: 'Singapore',             value: '2702' },
+  { label: 'Thailand',              value: '2764' },
+  { label: 'Indonesia',             value: '2360' },
+  { label: 'United Arab Emirates',  value: '2784' },
+  { label: 'Saudi Arabia',          value: '2682' },
+  { label: 'Egypt',                 value: '2818' },
+  { label: 'Israel',                value: '2376' },
+  { label: 'South Africa',          value: '2710' },
+  { label: 'Nigeria',               value: '2566' },
+  { label: 'Argentina',             value: '2032' },
+  { label: 'Chile',                 value: '2152' },
+  { label: 'Colombia',              value: '2170' },
+  { label: 'Peru',                  value: '2604' },
+  { label: 'Portugal',              value: '2620' },
+  { label: 'Greece',                value: '2300' },
+  { label: 'Bulgaria',              value: '2100' },
+  { label: 'Croatia',               value: '2191' },
+  { label: 'Slovakia',              value: '2703' },
+  { label: 'Austria',               value: '2040' },
+  { label: 'Switzerland',           value: '2756' },
+  { label: 'New Zealand',           value: '2554' },
+];
 
 const FIELDS: Record<QueryField, FieldDef> = {
   // DataForSEO Labs / Keywords Data — result-level fields
@@ -24,8 +93,8 @@ const FIELDS: Record<QueryField, FieldDef> = {
   main_intent:        { label: 'Search Intent',                     type: 'enum', enumValues: ['informational', 'navigational', 'commercial', 'transactional'] },
   // Cache / search context fields
   seed_keyword:       { label: 'Seed Keyword',                     type: 'string' },
-  location:           { label: 'Location Code',                    type: 'string' },
-  language:           { label: 'Language',                         type: 'string' },
+  location:           { label: 'Location',                         type: 'enum', enumOptions: DFS_LOCATIONS },
+  language:           { label: 'Language',                         type: 'enum', enumValues: DFS_LANGUAGES },
   api_type:           { label: 'API Type',                         type: 'enum', enumValues: ['labs', 'live'] },
   engine:             { label: 'Engine',                           type: 'enum', enumValues: ['google', 'bing', 'yahoo', 'baidu'] },
 };
@@ -147,18 +216,23 @@ function ClauseRow({ clause, onChange, onRemove, isFirst }: ClauseRowProps) {
         ))}
       </select>
 
-      {/* Value input — text, number, or enum select */}
+      {/* Value input — text, number, simple enum, or rich enum (label ≠ value) */}
       <div className="flex-[2] min-w-0">
-        {fieldDef.type === 'enum' && fieldDef.enumValues ? (
+        {fieldDef.type === 'enum' && (fieldDef.enumOptions || fieldDef.enumValues) ? (
           <select
             value={clause.value}
             onChange={e => onChange({ ...clause, value: e.target.value })}
             className="w-full px-3 py-1.5 border border-border rounded-lg text-sm font-bold bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
           >
             <option value="">— select —</option>
-            {fieldDef.enumValues.map(v => (
-              <option key={v} value={v}>{v}</option>
-            ))}
+            {fieldDef.enumOptions
+              ? fieldDef.enumOptions.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))
+              : fieldDef.enumValues!.map(v => (
+                  <option key={v} value={v}>{v}</option>
+                ))
+            }
           </select>
         ) : (
           <input
