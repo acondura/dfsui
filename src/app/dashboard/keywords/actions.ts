@@ -61,21 +61,25 @@ export async function fetchKeywords(
 
   const auth = btoa(`${dfsUser}:${dfsPass}`);
   
+  // DataForSEO expects Title Case language names (e.g. "Romanian", "Chinese Simplified")
+  // Normalize user input so "romanian" or "ENGLISH" are accepted without error
+  const languageNormalized = language.trim().replace(/\w+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
   let endpoint = '';
   let payload: any[] = [];
 
   if (apiType === 'labs') {
     endpoint = `https://api.dataforseo.com/v3/dataforseo_labs/${engine}/${labsFunction}/live`;
     if (labsFunction === 'keyword_suggestions') {
-        payload = [{ keyword, location_code: locCode, language_name: language, limit: 1000 }];
+        payload = [{ keyword, location_code: locCode, language_name: languageNormalized, limit: 1000 }];
     } else {
-        payload = [{ keywords: [keyword], location_code: locCode, language_name: language, limit: 1000 }];
+        payload = [{ keywords: [keyword], location_code: locCode, language_name: languageNormalized, limit: 1000 }];
     }
   } else {
     // Keywords Data API - Mapping to Google Ads as primary live source
     const subEngine = engine === 'google' ? 'google_ads' : engine;
     endpoint = `https://api.dataforseo.com/v3/keywords_data/${subEngine}/keywords_for_keywords/live`;
-    payload = [{ keywords: [keyword], location_code: locCode, language_name: language, include_seed_keyword: true }];
+    payload = [{ keywords: [keyword], location_code: locCode, language_name: languageNormalized, include_seed_keyword: true }];
   }
 
   try {
